@@ -93,7 +93,21 @@ export function Header({
   // Update URL query parameters when date or page changes
   useEffect(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set('date', selectedDate.toISOString().split('T')[0]);
+    
+    // Format date consistently in Indian timezone
+    const formatDateForURL = (date: Date): string => {
+      try {
+        const indianDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        const year = indianDate.getFullYear();
+        const month = String(indianDate.getMonth() + 1).padStart(2, '0');
+        const day = String(indianDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch (error) {
+        return date.toISOString().split('T')[0];
+      }
+    };
+    
+    url.searchParams.set('date', formatDateForURL(selectedDate));
     url.searchParams.set('page', currentPage.toString());
     
     // Update URL without reloading the page
@@ -103,7 +117,21 @@ export function Header({
   // Get current URL with query parameters for sharing
   const getCurrentPageUrl = () => {
     const url = new URL(window.location.href);
-    url.searchParams.set('date', selectedDate.toISOString().split('T')[0]);
+    
+    // Format date consistently in Indian timezone
+    const formatDateForURL = (date: Date): string => {
+      try {
+        const indianDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        const year = indianDate.getFullYear();
+        const month = String(indianDate.getMonth() + 1).padStart(2, '0');
+        const day = String(indianDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch (error) {
+        return date.toISOString().split('T')[0];
+      }
+    };
+    
+    url.searchParams.set('date', formatDateForURL(selectedDate));
     url.searchParams.set('page', currentPage.toString());
     return url.toString();
   };
@@ -170,8 +198,21 @@ export function Header({
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
+                // Format date consistently for download filename
+                const formatDateForDownload = (date: Date): string => {
+                  try {
+                    const indianDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                    const year = indianDate.getFullYear();
+                    const month = String(indianDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(indianDate.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  } catch (error) {
+                    return date.toISOString().split('T')[0];
+                  }
+                };
+                
                 link.download = `newspaper-page-${currentPage}-${
-                  selectedDate.toISOString().split("T")[0]
+                  formatDateForDownload(selectedDate)
                 }-zoom-${zoom}.png`;
                 document.body.appendChild(link);
                 link.click();
