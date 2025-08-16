@@ -11,8 +11,55 @@ import {
   type NewspaperData,
   type NewspaperPage,
 } from "@/lib/newspaperApi";
+import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
+
+// Helper function to format dates consistently in Indian timezone
+const formatDateForAPI = (date: Date): string => {
+  try {
+    const indianDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const year = indianDate.getFullYear();
+    const month = String(indianDate.getMonth() + 1).padStart(2, '0');
+    const day = String(indianDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    return date.toISOString().split("T")[0];
+  }
+};
+
+// Helper function to convert Supabase data to NewspaperData format
+const convertSupabaseToNewspaperData = (newspaperRecord: NewspaperRecord): NewspaperData => {
+  const pages: NewspaperPage[] = [];
+  
+  // Convert the nested pages structure to flat array
+  Object.entries(newspaperRecord.pages.pages).forEach(([pageNum, pageData]) => {
+    const pageNumber = parseInt(pageNum);
+    pages.push({
+      pageNumber,
+      imageUrl: pageData.images[0]?.secure_url || '',
+      section: `page-${pageNum}`,
+      title: pageData.title,
+      content: `Newspaper page ${pageNum}`,
+      metadata: {
+        date: newspaperRecord.date_of_paper,
+        headlines: [`Page ${pageNum} Content`],
+        author: "Newspaper Staff"
+      }
+    });
+  });
+  
+  // Sort pages by page number
+  pages.sort((a, b) => a.pageNumber - b.pageNumber);
+  
+  return {
+    date: newspaperRecord.date_of_paper,
+    totalPages: newspaperRecord.pages.totalPages,
+    pages: pages,
+    title: "Jawan Bharat",
+    edition: "Morning Edition"
+  };
+};
 
 export function NewspaperApp() {
   const [newspaperData, setNewspaperData] = useState<NewspaperData | null>(
@@ -70,65 +117,102 @@ export function NewspaperApp() {
       setLoading(true);
       setError(null);
       try {
-        const dateString = selectedDate.toISOString().split("T")[0];
-        const data = await getNewspaper(dateString);
-        setNewspaperData(data);
-        setTotalPages(data.totalPages);
-
-        // Only reset to first page if this is a manual date change (not from URL params)
-        // The URL parameter reading will handle setting the correct page
-        if (initialUrlProcessed && !window.location.search.includes('page=')) {
-          setCurrentPage(1);
+        const dateString = formatDateForAPI(selectedDate);
+        console.log('📅 Fetching newspaper for date:', dateString);
+        
+        // Call Supabase API to get newspaper data
+        const newspaperRecord = await newspaperService.getNewspaperByDate(dateString);
+        
+        if (newspaperRecord) {
+          // Convert Supabase data to app format
+          const data = convertSupabaseToNewspaperData(newspaperRecord);
+          setNewspaperData(data);
+          setTotalPages(data.totalPages);
+          console.log('✅ API call successful, data received:', data);
+        } else {
+          // No data found for this date, fallback to dummy data
+          console.log('⚠️ No data found for date, using fallback');
+          const data = await getNewspaper(dateString);
+          setNewspaperData(data);
+          setTotalPages(data.totalPages);
         }
+
+        // Always reset to first page when date changes
+        setCurrentPage(1);
         setSelectedSection("front-page");
         
-        // Removed toast notification for date change
       } catch (err) {
-        setError("Failed to fetch newspaper data");
         console.error("Error fetching newspaper:", err);
-        toast({
-          title: "Load Failed",
-          description: "Failed to load newspaper for selected date",
-          variant: "destructive",
-        });
+        // Fallback to dummy data on error
+        try {
+          const dateString = formatDateForAPI(selectedDate);
+          const data = await getNewspaper(dateString);
+          setNewspaperData(data);
+          setTotalPages(data.totalPages);
+        } catch (fallbackErr) {
+          setError("Failed to fetch newspaper data");
+          toast({
+            title: "Load Failed",
+            description: "Failed to load newspaper for selected date",
+            variant: "destructive",
+          });
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchNewspaper();
-  }, [selectedDate,initialUrlProcessed]);
+  }, [selectedDate, initialUrlProcessed]);
 
   // Function to refresh all pages for current date
   const refreshAllPages = async () => {
     setLoading(true);
     try {
-      const dateString = selectedDate.toISOString().split("T")[0];
-      const allPages = await getAllPagesForDate(dateString);
+      const dateString = formatDateForAPI(selectedDate);
+      console.log('🔄 Refreshing pages for date:', dateString);
       
-      if (allPages.length > 0) {
-        setNewspaperData(prev => ({
-          ...prev!,
-          pages: allPages,
-          totalPages: allPages.length
-        }));
-        setTotalPages(allPages.length);
+      // Call Supabase API to get fresh newspaper data
+      const newspaperRecord = await newspaperService.getNewspaperByDate(dateString);
+      
+      if (newspaperRecord) {
+        // Convert Supabase data to app format
+        const data = convertSupabaseToNewspaperData(newspaperRecord);
+        setNewspaperData(data);
+        setTotalPages(data.totalPages);
         
-        // Update current page if it's out of bounds
-        if (currentPage > allPages.length) {
-          setCurrentPage(1);
-        }
+        // Always reset to first page when refreshing
+        setCurrentPage(1);
         
         toast({
           title: "Pages Refreshed",
-          description: `Successfully loaded ${allPages.length} pages for ${dateString}`,
+          description: `Successfully loaded ${data.totalPages} pages for ${dateString}`,
         });
       } else {
-        toast({
-          title: "No Pages Found",
-          description: `No newspaper pages found for ${dateString}`,
-          variant: "destructive",
-        });
+        // No data found, fallback to dummy data
+        const allPages = await getAllPagesForDate(dateString);
+        if (allPages.length > 0) {
+          setNewspaperData(prev => ({
+            ...prev!,
+            pages: allPages,
+            totalPages: allPages.length
+          }));
+          setTotalPages(allPages.length);
+          
+          // Always reset to first page when refreshing
+          setCurrentPage(1);
+          
+          toast({
+            title: "Pages Refreshed",
+            description: `Successfully loaded ${allPages.length} pages for ${dateString}`,
+          });
+        } else {
+          toast({
+            title: "No Pages Found",
+            description: `No newspaper pages found for ${dateString}`,
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error('Error refreshing pages:', error);
@@ -146,49 +230,13 @@ export function NewspaperApp() {
   const handlePageChange = async (page: number) => {
     setCurrentPage(page);
     
-    // Try to fetch the specific page from Cloudinary
-    try {
-      const dateString = selectedDate.toISOString().split("T")[0];
-      const pageData = await getNewspaperPage(dateString, page);
-      
-      if (pageData) {
-        // Update the current page data in newspaperData
-        setNewspaperData(prev => {
-          if (!prev) return prev;
-          
-          const updatedPages = [...prev.pages];
-          const existingPageIndex = updatedPages.findIndex(p => p.pageNumber === page);
-          
-          if (existingPageIndex >= 0) {
-            updatedPages[existingPageIndex] = pageData;
-          } else {
-            updatedPages.push(pageData);
-          }
-          
-          return {
-            ...prev,
-            pages: updatedPages,
-            totalPages: Math.max(prev.totalPages, page)
-          };
-        });
-        
-        setSelectedSection(pageData.section);
-        
-        // Removed success notification for page load
-      } else {
-        // Fallback to existing data
-        const pageData = newspaperData?.pages.find((p) => p.pageNumber === page);
-        if (pageData) {
-          setSelectedSection(pageData.section);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching page:', error);
-      // Fallback to existing data
-      const pageData = newspaperData?.pages.find((p) => p.pageNumber === page);
-      if (pageData) {
-        setSelectedSection(pageData.section);
-      }
+    // Use existing data from the API call - no new API call needed
+    const pageData = newspaperData?.pages.find((p) => p.pageNumber === page);
+    if (pageData) {
+      setSelectedSection(pageData.section);
+      console.log('📄 Page changed to:', page, 'using existing data');
+    } else {
+      console.log('⚠️ Page data not found for page:', page);
     }
   };
 

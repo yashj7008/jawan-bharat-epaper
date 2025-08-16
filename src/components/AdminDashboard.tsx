@@ -6,9 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Upload, X, CheckCircle, AlertCircle, Image as ImageIcon, Calendar as CalendarIcon, User, LogOut } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle, Calendar as CalendarIcon, User, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { uploadToCloudinary, fetchNewspaperPages, CloudinaryImage, storeUploadedImage } from '@/lib/cloudinary';
+import { uploadToCloudinary, CloudinaryImage, storeUploadedImage } from '@/lib/cloudinary';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,8 +32,6 @@ export function AdminDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [pageNumber, setPageNumber] = useState(1);
-  const [isFetching, setIsFetching] = useState(false);
-  const [fetchedImages, setFetchedImages] = useState<CloudinaryImage[]>([]);
   const [isCreatingNewspaper, setIsCreatingNewspaper] = useState(false);
   const [newspaperExists, setNewspaperExists] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,49 +72,26 @@ export function AdminDashboard() {
     });
   };
 
-  const fetchImages = async () => {
-    setIsFetching(true);
-    try {
-      const images = await fetchNewspaperPages(selectedDate, pageNumber);
-      setFetchedImages(images);
-      
-      if (images.length > 0) {
-        toast({
-          title: "Fetch Successful",
-          description: `Found ${images.length} image(s) for ${format(selectedDate, "MMM dd, yyyy")} - Page ${pageNumber}`,
-        });
-      } else {
-        toast({
-          title: "No Images Found",
-          description: `No images found for ${format(selectedDate, "MMM dd, yyyy")} - Page ${pageNumber}`,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Fetch Failed",
-        description: "Failed to fetch images from Cloudinary",
-        variant: "destructive",
-      });
-    } finally {
-      setIsFetching(false);
-    }
-  };
+
 
   const clearLocalStorage = () => {
     localStorage.removeItem('cloudinary_images');
-    setFetchedImages([]);
+    setImages([]);
+    setNewspaperExists(false);
     toast({
       title: "Storage Cleared",
-      description: "All locally stored images have been cleared",
+      description: "All uploaded images have been cleared",
     });
   };
 
   // Create newspaper record in database
   const createNewspaper = async () => {
-    if (fetchedImages.length === 0) {
+    const successImages = images.filter(img => img.status === 'success');
+    
+    if (successImages.length === 0) {
       toast({
         title: "No Images Available",
-        description: "Please fetch images first before creating a newspaper record",
+        description: "Please upload images first before creating a newspaper record",
         variant: "destructive",
       });
       return;
@@ -138,8 +113,20 @@ export function AdminDashboard() {
         return;
       }
 
-      // Generate newspaper data structure
-      const newspaperData = newspaperService.generateNewspaperData(fetchedImages, dateString);
+      // Generate newspaper data structure from uploaded images
+      // Convert UploadedImage to CloudinaryImage format for the service
+      const cloudinaryImages = successImages.map(img => ({
+        public_id: img.cloudinaryUrl?.split('/').pop() || img.id,
+        secure_url: img.cloudinaryUrl || '',
+        context: {
+          page: img.pageNumber.toString(),
+          date: format(img.date, 'yyyy-MM-dd')
+        },
+        tags: [],
+        created_at: new Date().toISOString()
+      }));
+      
+      const newspaperData = newspaperService.generateNewspaperData(cloudinaryImages, dateString);
       
       // Validate the data
       const validation = newspaperService.validateNewspaperData(newspaperData);
@@ -252,7 +239,7 @@ export function AdminDashboard() {
   const getStatusIcon = (status: UploadedImage['status']) => {
     switch (status) {
       case 'pending':
-        return <ImageIcon className="h-4 w-4 text-gray-400" />;
+        return <div className="h-4 w-4 text-gray-400">⏳</div>;
       case 'uploading':
         return <Upload className="h-4 w-4 text-blue-500 animate-pulse" />;
       case 'success':
@@ -308,48 +295,78 @@ export function AdminDashboard() {
         )}
       </div>
 
-      {/* Upload Section */}
+      {/* Date Selection */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Select Newspaper Date</CardTitle>
+          <CardDescription>
+            Choose the date for your newspaper publication
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "justify-start text-left font-normal min-w-[200px]",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <div className="text-sm text-gray-600">
+              Selected: <span className="font-medium">{format(selectedDate, "EEEE, MMMM dd, yyyy")}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Image Upload Section */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Upload Images</CardTitle>
           <CardDescription>
-            Select multiple images to upload to Cloudinary. Supported formats: JPG, PNG, GIF, WebP
+            Add images with their page numbers. Each image will be uploaded to Cloudinary.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Date and Page Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="newspaper-date">Newspaper Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !selectedDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+            {/* Add New Image Row */}
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <div className="flex-1">
+                <Label htmlFor="new-image-file" className="text-sm font-medium text-gray-700 mb-2 block">
+                  Select Image
+                </Label>
+                <Input
+                  ref={fileInputRef}
+                  id="new-image-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="w-full"
+                />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="page-number">Page Number</Label>
+              <div className="w-32">
+                <Label htmlFor="new-page-number" className="text-sm font-medium text-gray-700 mb-2 block">
+                  Page Number
+                </Label>
                 <Input
-                  id="page-number"
+                  id="new-page-number"
                   type="number"
                   min="1"
                   value={pageNumber}
@@ -357,58 +374,143 @@ export function AdminDashboard() {
                   className="w-full"
                 />
               </div>
+              
+              <div className="w-32">
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  &nbsp;
+                </Label>
+                <Button 
+                  onClick={uploadImages}
+                  disabled={isUploading || images.filter(img => img.status === 'pending').length === 0}
+                  className="w-full"
+                >
+                  {isUploading ? (
+                    <>
+                      <Upload className="h-4 w-4 mr-2 animate-pulse" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
+            {/* Uploaded Images List */}
+            {images.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium text-gray-900">Uploaded Images</h3>
+                {images.map((image) => (
+                  <div key={image.id} className="flex items-center gap-4 p-4 bg-white rounded-lg border">
+                    {/* Image Preview */}
+                    <div className="relative w-20 h-20 flex-shrink-0">
+                      <img
+                        src={image.preview}
+                        alt={image.file.name}
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                        onClick={() => removeImage(image.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    {/* Image Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-gray-900 truncate">
+                          {image.file.name}
+                        </h4>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(image.status)}`}>
+                          {image.status}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-xs text-gray-600">
+                        <div>
+                          <span className="font-medium">Page:</span> {image.pageNumber}
+                        </div>
+                        <div>
+                          <span className="font-medium">Size:</span> {(image.file.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                        <div>
+                          <span className="font-medium">Date:</span> {format(image.date, "MMM dd, yyyy")}
+                        </div>
+                        <div>
+                          <span className="font-medium">Status:</span> {getStatusIcon(image.status)}
+                        </div>
+                      </div>
+
+                      {image.status === 'uploading' && (
+                        <Progress value={image.progress} className="h-2 mt-2" />
+                      )}
+
+                      {image.status === 'success' && image.cloudinaryUrl && (
+                        <div className="text-xs text-green-600 break-all mt-2">
+                          ✅ {image.cloudinaryUrl}
+                        </div>
+                      )}
+
+                      {image.status === 'error' && image.error && (
+                        <div className="text-xs text-red-600 mt-2">
+                          ❌ Error: {image.error}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Add Pages to Newspaper CTA */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Create Newspaper Record</CardTitle>
+          <CardDescription>
+            Review and create newspaper record with all uploaded images
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-lg font-medium text-blue-900 mb-2">Summary</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-blue-700">Date:</span>
+                  <div className="text-blue-900">{format(selectedDate, "MMM dd, yyyy")}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-700">Total Images:</span>
+                  <div className="text-blue-900">{images.length}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-700">Total Pages:</span>
+                  <div className="text-blue-900">{Math.max(...images.map(img => img.pageNumber), 0)}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-700">Uploaded:</span>
+                  <div className="text-blue-900">{images.filter(img => img.status === 'success').length}/{images.length}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
             <div className="flex items-center gap-4">
-              <Input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="flex-1"
-              />
-              <Button 
-                onClick={uploadImages}
-                disabled={isUploading || images.filter(img => img.status === 'pending').length === 0}
-                className="min-w-[120px]"
-              >
-                {isUploading ? (
-                  <>
-                    <Upload className="h-4 w-4 mr-2 animate-pulse" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload All
-                  </>
-                )}
-              </Button>
-              
-              <Button 
-                onClick={fetchImages}
-                disabled={isFetching}
-                variant="outline"
-                className="min-w-[120px]"
-              >
-                {isFetching ? (
-                  <>
-                    <ImageIcon className="h-4 w-4 mr-2 animate-pulse" />
-                    Fetching...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    Fetch Images
-                  </>
-                )}
-              </Button>
-              
               <Button 
                 onClick={createNewspaper}
-                disabled={isCreatingNewspaper || fetchedImages.length === 0 || newspaperExists}
-                className={`min-w-[140px] ${
+                disabled={isCreatingNewspaper || images.filter(img => img.status === 'success').length === 0 || newspaperExists}
+                className={`min-w-[200px] ${
                   newspaperExists 
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-green-600 hover:bg-green-700'
@@ -417,17 +519,17 @@ export function AdminDashboard() {
                 {isCreatingNewspaper ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
+                    Creating Newspaper...
                   </>
                 ) : newspaperExists ? (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Already Created
+                    Newspaper Already Created
                   </>
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Create Newspaper
+                    Add Pages to Newspaper
                   </>
                 )}
               </Button>
@@ -435,121 +537,48 @@ export function AdminDashboard() {
               <Button 
                 onClick={clearLocalStorage}
                 variant="outline"
-                className="min-w-[120px] text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
               >
-                Clear Storage
+                Clear All
               </Button>
             </div>
 
-            {images.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {images.map((image) => (
-                  <Card key={image.id} className="relative">
-                    <CardContent className="p-4">
-                      <div className="relative">
-                        <img
-                          src={image.preview}
-                          alt={image.file.name}
-                          className="w-full h-32 object-cover rounded-md"
-                        />
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="absolute top-2 right-2 h-6 w-6 p-0"
-                          onClick={() => removeImage(image.id)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {image.file.name}
-                          </span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(image.status)}`}>
-                            {image.status}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(image.status)}
-                          <span className="text-xs text-gray-500">
-                            {(image.file.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
-                        </div>
-
-                        {/* Date and Page Info */}
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div>📅 {format(image.date, "MMM dd, yyyy")}</div>
-                          <div>📄 Page {image.pageNumber}</div>
-                        </div>
-
-                        {image.status === 'uploading' && (
-                          <Progress value={image.progress} className="h-2" />
-                        )}
-
-                        {image.status === 'success' && image.cloudinaryUrl && (
-                          <div className="text-xs text-green-600 break-all">
-                            {image.cloudinaryUrl}
-                          </div>
-                        )}
-
-                        {image.status === 'error' && image.error && (
-                          <div className="text-xs text-red-600">
-                            Error: {image.error}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+            {/* Debug Info (Console Only) */}
+            {images.filter(img => img.status === 'success').length > 0 && (
+              <div className="p-4 bg-gray-50 rounded-lg border">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Debug Info (Check Console)</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const successImages = images.filter(img => img.status === 'success');
+                    const newspaperData = {
+                      date: format(selectedDate, 'yyyy-MM-dd'),
+                      totalPages: Math.max(...successImages.map(img => img.pageNumber), 0),
+                      totalImages: successImages.length,
+                      pages: successImages.map(img => ({
+                        pageNumber: img.pageNumber,
+                        cloudinaryUrl: img.cloudinaryUrl,
+                        fileName: img.file.name,
+                        fileSize: img.file.size
+                      }))
+                    };
+                    console.log('📰 Newspaper Data for API:', newspaperData);
+                    toast({
+                      title: "Data Logged to Console",
+                      description: "Check browser console for newspaper data structure",
+                    });
+                  }}
+                >
+                  Log Newspaper Data to Console
+                </Button>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Fetched Images Section */}
-      {fetchedImages.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Fetched Images</CardTitle>
-            <CardDescription>
-              Images retrieved from Cloudinary for {format(selectedDate, "MMM dd, yyyy")} - Page {pageNumber}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {fetchedImages.map((image, index) => (
-                <Card key={index} className="relative">
-                  <CardContent className="p-4">
-                    <div className="relative">
-                      <img
-                        src={image.secure_url}
-                        alt={`Page ${image.context.page}`}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                    </div>
-                    
-                    <div className="mt-3 space-y-2">
-                      <div className="text-xs text-gray-600 space-y-1">
-                        <div>📅 {image.context.date}</div>
-                        <div>📄 Page {image.context.page}</div>
-                        <div>🆔 {image.public_id}</div>
-                      </div>
-                      
-                      <div className="text-xs text-blue-600 break-all">
-                        {image.secure_url}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
     </div>
   );

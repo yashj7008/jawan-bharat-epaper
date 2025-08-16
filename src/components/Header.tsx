@@ -49,6 +49,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router";
 
 interface HeaderProps {
   currentPage: number;
@@ -89,22 +90,55 @@ export function Header({
   const [isMobileDatePickerOpen, setIsMobileDatePickerOpen] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const navigate = useNavigate();
 
   // Update URL query parameters when date or page changes
   useEffect(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set('date', selectedDate.toISOString().split('T')[0]);
-    url.searchParams.set('page', currentPage.toString());
-    
+
+    // Format date consistently in Indian timezone
+    const formatDateForURL = (date: Date): string => {
+      try {
+        const indianDate = new Date(
+          date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+        );
+        const year = indianDate.getFullYear();
+        const month = String(indianDate.getMonth() + 1).padStart(2, "0");
+        const day = String(indianDate.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      } catch (error) {
+        return date.toISOString().split("T")[0];
+      }
+    };
+
+    url.searchParams.set("date", formatDateForURL(selectedDate));
+    url.searchParams.set("page", currentPage.toString());
+
     // Update URL without reloading the page
-    window.history.replaceState({}, '', url.toString());
+    window.history.replaceState({}, "", url.toString());
   }, [selectedDate, currentPage]);
 
   // Get current URL with query parameters for sharing
   const getCurrentPageUrl = () => {
     const url = new URL(window.location.href);
-    url.searchParams.set('date', selectedDate.toISOString().split('T')[0]);
-    url.searchParams.set('page', currentPage.toString());
+
+    // Format date consistently in Indian timezone
+    const formatDateForURL = (date: Date): string => {
+      try {
+        const indianDate = new Date(
+          date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+        );
+        const year = indianDate.getFullYear();
+        const month = String(indianDate.getMonth() + 1).padStart(2, "0");
+        const day = String(indianDate.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      } catch (error) {
+        return date.toISOString().split("T")[0];
+      }
+    };
+
+    url.searchParams.set("date", formatDateForURL(selectedDate));
+    url.searchParams.set("page", currentPage.toString());
     return url.toString();
   };
 
@@ -170,9 +204,27 @@ export function Header({
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
-                link.download = `newspaper-page-${currentPage}-${
-                  selectedDate.toISOString().split("T")[0]
-                }-zoom-${zoom}.png`;
+                // Format date consistently for download filename
+                const formatDateForDownload = (date: Date): string => {
+                  try {
+                    const indianDate = new Date(
+                      date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+                    );
+                    const year = indianDate.getFullYear();
+                    const month = String(indianDate.getMonth() + 1).padStart(
+                      2,
+                      "0"
+                    );
+                    const day = String(indianDate.getDate()).padStart(2, "0");
+                    return `${year}-${month}-${day}`;
+                  } catch (error) {
+                    return date.toISOString().split("T")[0];
+                  }
+                };
+
+                link.download = `newspaper-page-${currentPage}-${formatDateForDownload(
+                  selectedDate
+                )}-zoom-${zoom}.png`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -260,25 +312,26 @@ export function Header({
         {/* Left section: Home and Date */}
         <div className="hidden md:flex items-center space-x-4">
           <SidebarTrigger className="mr-2" />
-          <Button
-            variant="ghost"
+          {/* <Button
+            variant="outline"
             size="sm"
-            className="text-foreground hover:bg-secondary"
+            className=""
+            onClick={() => navigate("/")}
           >
             <Home className="h-4 w-4 mr-2" />
             Home
-          </Button>
+          </Button> */}
 
-          <Button
-            variant="ghost"
+          {/* <Button
+            variant="outline"
             size="sm"
             className="text-foreground hover:bg-secondary"
             onClick={() => (window.location.href = "/admin")}
           >
             Admin
-          </Button>
+          </Button> */}
 
-          {user ? (
+          {/* {user ? (
             <div className="flex items-center space-x-2">
               <span className="text-sm text-muted-foreground">
                 {user.email}
@@ -301,7 +354,7 @@ export function Header({
             >
               Sign In
             </Button>
-          )}
+          )} */}
 
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
@@ -335,12 +388,15 @@ export function Header({
         </div>
 
         {/* Center section: Page navigation */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 md:ml-32">
           <div className="flex items-center space-x-2">
             <SidebarTrigger className="mr-2 md:hidden" />
-            
+
             {/* Mobile Date Picker */}
-            <Popover open={isMobileDatePickerOpen} onOpenChange={setIsMobileDatePickerOpen}>
+            <Popover
+              open={isMobileDatePickerOpen}
+              onOpenChange={setIsMobileDatePickerOpen}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -381,8 +437,10 @@ export function Header({
             </Button>
 
             <div className="flex flex-col items-center space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="hidden md:block text-sm text-muted-foreground">Page</span>
+              <div className="flex items-center space-x-2 md:ml-4">
+                <span className="hidden md:block text-sm text-muted-foreground">
+                  Page
+                </span>
                 <Input
                   type="number"
                   value={currentPage}
@@ -413,7 +471,12 @@ export function Header({
           </div>
 
           {/* Mobile Crop Button */}
-          <Button variant="outline" size="sm" onClick={handleCrop} className="md:hidden">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCrop}
+            className="md:hidden"
+          >
             <Crop className="h-4 w-4" />
           </Button>
         </div>
@@ -446,7 +509,7 @@ export function Header({
             <Crop className="h-4 w-4" />
           </Button>
 
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={onRefreshPages}
@@ -455,7 +518,7 @@ export function Header({
             <RefreshCw
               className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
             />
-          </Button>
+          </Button> */}
 
           {/* Share Dropdown */}
           <DropdownMenu>
@@ -464,20 +527,35 @@ export function Header({
                 <Share2 className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 [&_.dropdown-item:hover]:text-white [&_.dropdown-item:hover_svg]:text-white">
-              <DropdownMenuItem onClick={() => handleShare("facebook")} className="dropdown-item">
+            <DropdownMenuContent
+              align="end"
+              className="w-48 [&_.dropdown-item:hover]:text-white [&_.dropdown-item:hover_svg]:text-white"
+            >
+              <DropdownMenuItem
+                onClick={() => handleShare("facebook")}
+                className="dropdown-item"
+              >
                 <Facebook className="h-4 w-4 mr-2 text-blue-600" />
                 Share on Facebook
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare("twitter")} className="dropdown-item">
+              <DropdownMenuItem
+                onClick={() => handleShare("twitter")}
+                className="dropdown-item"
+              >
                 <Twitter className="h-4 w-4 mr-2 text-blue-400" />
                 Share on Twitter
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare("whatsapp")} className="dropdown-item">
+              <DropdownMenuItem
+                onClick={() => handleShare("whatsapp")}
+                className="dropdown-item"
+              >
                 <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
                 Share on WhatsApp
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleShare("copy")} className="dropdown-item">
+              <DropdownMenuItem
+                onClick={() => handleShare("copy")}
+                className="dropdown-item"
+              >
                 {isLinkCopied ? (
                   <>
                     <Check className="h-4 w-4 mr-2 text-green-600" />

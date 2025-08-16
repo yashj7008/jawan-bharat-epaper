@@ -1,10 +1,17 @@
 import { CloudinaryImage } from './cloudinary';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables');
+}
+
 
 export interface NewspaperPage {
-  section: string;
   title: string;
   images: CloudinaryImage[];
-  content: any[];
 }
 
 export interface NewspaperData {
@@ -37,20 +44,29 @@ export class NewspaperService {
   // Create a new newspaper record
   async createNewspaper(date: string, pages: NewspaperData): Promise<NewspaperRecord> {
     try {
-      const response = await fetch('/api/newspapers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date_of_paper: date,
-          pages: pages
-        })
-      });
+      console.log('Creating newspaper:', date, pages);
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      console.log('supabase', supabase);    
 
-      if (!response.ok) {
-        throw new Error(`Failed to create newspaper: ${response.statusText}`);
+      const { data, error } = await supabase
+        .from('newspaper')
+        .insert([{ date_of_paper: date, pages: pages }])
+        .select();
+
+      if (error) {
+        throw new Error(`Failed to create newspaper: ${error.message}`);
       }
 
-      const result = await response.json();
+      if (!data || data.length === 0) {
+        throw new Error('No data returned from database');
+      }
+
+      const result = data[0];
       console.log('✅ Newspaper created successfully:', result);
       return result;
     } catch (error) {
@@ -62,12 +78,27 @@ export class NewspaperService {
   // Get newspaper by date
   async getNewspaperByDate(date: string): Promise<NewspaperRecord | null> {
     try {
-      const response = await fetch(`/api/newspapers/${date}`);
-      if (response.ok) {
-        const data = await response.json();
-        return data;
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing');
       }
-      return null;
+      
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      
+      const { data, error } = await supabase
+        .from('newspaper')
+        .select('*')
+        .eq('date_of_paper', date)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned
+          return null;
+        }
+        throw new Error(`Failed to fetch newspaper: ${error.message}`);
+      }
+
+      return data;
     } catch (error) {
       console.error('Error fetching newspaper:', error);
       return null;
@@ -76,8 +107,28 @@ export class NewspaperService {
 
   // Check if newspaper exists for a date
   async newspaperExists(date: string): Promise<boolean> {
-    const newspaper = await this.getNewspaperByDate(date);
-    return !!newspaper;
+    try {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        return false;
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      
+      const { count, error } = await supabase
+        .from('newspaper')
+        .select('*', { count: 'exact', head: true })
+        .eq('date_of_paper', date);
+
+      if (error) {
+        console.error('Error checking newspaper existence:', error);
+        return false;
+      }
+
+      return (count || 0) > 0;
+    } catch (error) {
+      console.error('Error checking newspaper existence:', error);
+      return false;
+    }
   }
 
   // Generate newspaper data structure from Cloudinary images
@@ -88,14 +139,11 @@ export class NewspaperService {
     // Group images by page
     images.forEach(image => {
       const pageNum = image.context?.page || '1';
-      const section = image.context?.section || 'general';
       
       if (!pages[pageNum]) {
         pages[pageNum] = {
-          section,
           title: `Page ${pageNum}`,
           images: [],
-          content: []
         };
       }
       
@@ -116,6 +164,7 @@ export class NewspaperService {
 
   // Validate newspaper data before saving
   validateNewspaperData(data: NewspaperData): { isValid: boolean; errors: string[] } {
+    console.log('Validating newspaper data:', data);
     const errors: string[] = [];
 
     if (!data.totalPages || data.totalPages <= 0) {
@@ -128,9 +177,6 @@ export class NewspaperService {
 
     // Validate each page
     Object.entries(data.pages).forEach(([pageNum, page]) => {
-      if (!page.section) {
-        errors.push(`Page ${pageNum}: Section is required`);
-      }
       if (!page.title) {
         errors.push(`Page ${pageNum}: Title is required`);
       }
