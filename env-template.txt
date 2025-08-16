@@ -1,0 +1,25 @@
+# Environment Variables Template
+# Copy this file to .env and fill in your actual values
+
+# Cloudinary Configuration (Optional - app will use mock data if not provided)
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name_here
+VITE_CLOUDINARY_API_KEY=your_api_key_here
+VITE_CLOUDINARY_API_SECRET=your_api_secret_here
+
+# Supabase Configuration (Required for authentication)
+VITE_SUPABASE_URL=your_supabase_project_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Example Cloudinary:
+# VITE_CLOUDINARY_CLOUD_NAME=mynewspaper
+# VITE_CLOUDINARY_API_KEY=123456789012345
+# VITE_CLOUDINARY_API_SECRET=abcdefghijklmnopqrstuvwxyz123456
+
+# Example Supabase:
+# VITE_SUPABASE_URL=https://your-project-id.supabase.co
+# VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Notes:
+# - Cloudinary: Optional - app will use mock data for testing if not provided
+# - Supabase: Required - authentication won't work without these credentials
+# - Get Supabase credentials from your project dashboard at https://supabase.com

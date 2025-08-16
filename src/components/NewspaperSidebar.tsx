@@ -1,0 +1,226 @@
+import { useState } from "react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Newspaper,
+  Bookmark,
+  Search,
+  Settings,
+  Archive,
+  TrendingUp,
+  Globe,
+  Building2,
+  Trophy,
+  Heart,
+  Zap,
+  FileText,
+  X,
+} from "lucide-react";
+import { type NewspaperPage } from "@/lib/dummyApi";
+
+interface SidebarProps {
+  selectedSection: string;
+  onSectionChange: (section: string) => void;
+  bookmarkedPages: number[];
+  onToggleBookmark: (page: number) => void;
+  currentPage: number;
+  pagesData?: NewspaperPage[];
+}
+
+const sections = [
+  { id: "front-page", label: "GO TO LANDING PAGE", icon: Newspaper },
+  { id: "home", label: "HOME", icon: TrendingUp },
+  // { id: "world", label: "World News", icon: Globe },
+  // { id: "politics", label: "Politics", icon: Building2 },
+  // { id: "sports", label: "Sports", icon: Trophy },
+  // { id: "lifestyle", label: "Lifestyle", icon: Heart },
+  // { id: "technology", label: "Technology", icon: Zap },
+  // { id: "opinion", label: "Opinion", icon: FileText },
+];
+
+const quickActions = [
+  // { id: "search", label: "Search Articles", icon: Search },
+  { id: "bookmarks", label: "My Bookmarks", icon: Bookmark },
+  // { id: "archive", label: "Archive", icon: Archive },
+  // { id: "settings", label: "Settings", icon: Settings },
+];
+
+export function NewspaperSidebar({
+  selectedSection,
+  onSectionChange,
+  bookmarkedPages,
+  onToggleBookmark,
+  currentPage,
+  pagesData,
+}: SidebarProps) {
+  const { state, toggleSidebar } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
+  return (
+    <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
+      <SidebarContent className="bg-paper">
+        {/* Close Button */}
+        {!isCollapsed && (
+          <div className="flex justify-between p-2">
+            <div className="mx-2 my-4">
+          <img
+            src="src/assets/jawan-bharat-logo.jpg"
+            alt="logo"
+            className="w-44 h-auto bg-transparent"
+            style={{ mixBlendMode: "darken" }}
+          />
+        </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="h-8 w-8 p-0 hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all duration-200"
+              title="Close sidebar"
+            >
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+            </Button>
+          </div>
+        )}
+        
+      
+            <Separator  />
+        {/* Newspaper Sections */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sections.map((section) => (
+                <SidebarMenuItem key={section.id}>
+                  <SidebarMenuButton
+                    onClick={() => onSectionChange(section.id)}
+                    className={`
+                      ${selectedSection === section.id 
+                        ? "font-medium font-serif text-accent" 
+                        : " text-muted-foreground"
+                      }
+                      transition-smooth font-serif text-muted-foreground 
+                    `}
+                  >
+                    <section.icon className="h-4 w-4" />
+                    {!isCollapsed && <span>{section.label}</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        
+
+        {/* Quick Actions */}
+        {/* <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {!isCollapsed && "Tools"}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {quickActions.map((action) => (
+                <SidebarMenuItem key={action.id}>
+                  <SidebarMenuButton
+                    onClick={() => console.log(`${action.label} clicked`)}
+                    className="hover:bg-secondary transition-smooth"
+                  >
+                    <action.icon className="h-4 w-4" />
+                    {!isCollapsed && <span>{action.label}</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup> */}
+
+        {!isCollapsed && (
+          <>
+            <Separator className="" />
+            
+            {/* Bookmarked Pages */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Bookmarks
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <ScrollArea className="h-48">
+                  {bookmarkedPages.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-2">
+                      No bookmarked pages
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {bookmarkedPages.map((pageId) => {
+                        const pageData = pagesData?.find(p => p.pageNumber === pageId);
+                        return (
+                          <Button
+                            key={pageId}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-xs"
+                            onClick={() => {
+                              // Navigate to the bookmarked page
+                              if (pageData) {
+                                onSectionChange(pageData.section);
+                              }
+                            }}
+                          >
+                            <Bookmark className="h-3 w-3 mr-2" />
+                            <div className="truncate text-left">
+                              <div className="font-medium">Page {pageId}</div>
+                              {pageData && (
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {pageData.title}
+                                </div>
+                              )}
+                            </div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <Separator className="my-2" />
+
+            {/* Current Page Bookmark Toggle */}
+            <div className="p-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => onToggleBookmark(currentPage)}
+              >
+                <Bookmark 
+                  className={`h-4 w-4 mr-2 ${
+                    bookmarkedPages.includes(currentPage) 
+                      ? "fill-current text-accent" 
+                      : ""
+                  }`} 
+                />
+                {bookmarkedPages.includes(currentPage) 
+                  ? "Remove Bookmark" 
+                  : "Bookmark Page"
+                }
+              </Button>
+            </div>
+          </>
+        )}
+      </SidebarContent>
+    </Sidebar>
+  );
+}
