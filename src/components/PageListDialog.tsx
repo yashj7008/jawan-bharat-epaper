@@ -36,7 +36,7 @@ export function PageListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] w-[95vw]">
+      <DialogContent className="max-w-6xl w-[95vw]">
         <DialogHeader>
           <DialogTitle className="headline">
             {newspaperData.title} - {newspaperData.edition}
@@ -45,7 +45,7 @@ export function PageListDialog({
             {newspaperData.date} • {totalPages} Pages
           </p>
         </DialogHeader>
-        
+
         <ScrollArea className="h-[70vh]">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
             {newspaperData.pages.map((page) => (
@@ -58,9 +58,10 @@ export function PageListDialog({
                   className={`
                     aspect-[3/4] bg-paper border-2 rounded-lg overflow-hidden
                     paper-shadow hover:elevated-shadow transition-all duration-200
-                    ${page.pageNumber === currentPage 
-                      ? "border-accent ring-2 ring-accent/20 scale-105" 
-                      : "border-border hover:border-accent/50 hover:scale-105"
+                    ${
+                      page.pageNumber === currentPage
+                        ? "border-accent ring-2 ring-accent/20 scale-105"
+                        : "border-border hover:border-accent/50 hover:scale-105"
                     }
                   `}
                 >
@@ -74,19 +75,23 @@ export function PageListDialog({
                       onError={(e) => {
                         // Fallback to placeholder when image fails to load
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const fallback = target.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                        target.style.display = "none";
+                        const fallback = target.parentElement?.querySelector(
+                          ".image-fallback"
+                        ) as HTMLElement;
                         if (fallback) {
-                          fallback.style.display = 'flex';
+                          fallback.style.display = "flex";
                         }
                       }}
                     />
-                    
+
                     {/* Fallback placeholder when image fails to load */}
                     <div className="image-fallback hidden absolute inset-0 bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center p-4">
                       <div className="text-center">
                         <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-2">
-                          <span className="text-2xl font-bold text-primary">{page.pageNumber}</span>
+                          <span className="text-2xl font-bold text-primary">
+                            {page.pageNumber}
+                          </span>
                         </div>
                         <h3 className="text-xs font-semibold text-foreground leading-tight mb-1">
                           {page.title}
@@ -96,29 +101,33 @@ export function PageListDialog({
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Page number overlay at bottom */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2">
                       <div className="text-center">
-                        <Badge 
-                          variant={page.pageNumber === currentPage ? "default" : "secondary"}
+                        <Badge
+                          variant={
+                            page.pageNumber === currentPage
+                              ? "default"
+                              : "secondary"
+                          }
                           className="text-xs font-bold"
                         >
                           Page {page.pageNumber}
                         </Badge>
                       </div>
                     </div>
-                    
+
                     {/* Section indicator overlay at top */}
                     <div className="absolute top-2 left-2">
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className="text-xs px-2 py-0.5 bg-white/90 text-foreground border-white/50 backdrop-blur-sm"
                       >
                         {page.section.replace("-", " ")}
                       </Badge>
                     </div>
-                    
+
                     {/* Hover title overlay */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                       <div className="text-center text-white p-2">
@@ -131,12 +140,10 @@ export function PageListDialog({
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Bookmark indicator */}
                   {bookmarkedPages.includes(page.pageNumber) && (
-                    <Bookmark 
-                      className="absolute top-2 right-2 h-3 w-3 fill-accent text-accent" 
-                    />
+                    <Bookmark className="absolute top-2 right-2 h-3 w-3 fill-accent text-accent" />
                   )}
                 </div>
 

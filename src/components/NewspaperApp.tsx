@@ -14,14 +14,17 @@ import {
 import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
 
 // Helper function to format dates consistently in Indian timezone
 const formatDateForAPI = (date: Date): string => {
   try {
-    const indianDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const indianDate = new Date(
+      date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    );
     const year = indianDate.getFullYear();
-    const month = String(indianDate.getMonth() + 1).padStart(2, '0');
-    const day = String(indianDate.getDate()).padStart(2, '0');
+    const month = String(indianDate.getMonth() + 1).padStart(2, "0");
+    const day = String(indianDate.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   } catch (error) {
     return date.toISOString().split("T")[0];
@@ -29,35 +32,37 @@ const formatDateForAPI = (date: Date): string => {
 };
 
 // Helper function to convert Supabase data to NewspaperData format
-const convertSupabaseToNewspaperData = (newspaperRecord: NewspaperRecord): NewspaperData => {
+const convertSupabaseToNewspaperData = (
+  newspaperRecord: NewspaperRecord
+): NewspaperData => {
   const pages: NewspaperPage[] = [];
-  
+
   // Convert the nested pages structure to flat array
   Object.entries(newspaperRecord.pages.pages).forEach(([pageNum, pageData]) => {
     const pageNumber = parseInt(pageNum);
     pages.push({
       pageNumber,
-      imageUrl: pageData.images[0]?.secure_url || '',
+      imageUrl: pageData.images[0]?.secure_url || "",
       section: `page-${pageNum}`,
       title: pageData.title,
       content: `Newspaper page ${pageNum}`,
       metadata: {
         date: newspaperRecord.date_of_paper,
         headlines: [`Page ${pageNum} Content`],
-        author: "Newspaper Staff"
-      }
+        author: "Newspaper Staff",
+      },
     });
   });
-  
+
   // Sort pages by page number
   pages.sort((a, b) => a.pageNumber - b.pageNumber);
-  
+
   return {
     date: newspaperRecord.date_of_paper,
     totalPages: newspaperRecord.pages.totalPages,
     pages: pages,
     title: "Jawan Bharat",
-    edition: "Morning Edition"
+    edition: "Morning Edition",
   };
 };
 
@@ -82,9 +87,9 @@ export function NewspaperApp() {
   // Read URL query parameters on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const dateParam = urlParams.get('date');
-    const pageParam = urlParams.get('page');
-    
+    const dateParam = urlParams.get("date");
+    const pageParam = urlParams.get("page");
+
     if (dateParam) {
       try {
         const parsedDate = new Date(dateParam);
@@ -92,17 +97,17 @@ export function NewspaperApp() {
           setSelectedDate(parsedDate);
         }
       } catch (error) {
-        console.error('Invalid date parameter:', dateParam);
+        console.error("Invalid date parameter:", dateParam);
       }
     }
-    
+
     if (pageParam) {
       const parsedPage = parseInt(pageParam);
       if (!isNaN(parsedPage) && parsedPage > 0) {
         setCurrentPage(parsedPage);
       }
     }
-    
+
     setInitialUrlProcessed(true);
   }, []); // Only run once on mount
 
@@ -118,20 +123,22 @@ export function NewspaperApp() {
       setError(null);
       try {
         const dateString = formatDateForAPI(selectedDate);
-        console.log('📅 Fetching newspaper for date:', dateString);
-        
+        console.log("📅 Fetching newspaper for date:", dateString);
+
         // Call Supabase API to get newspaper data
-        const newspaperRecord = await newspaperService.getNewspaperByDate(dateString);
-        
+        const newspaperRecord = await newspaperService.getNewspaperByDate(
+          dateString
+        );
+
         if (newspaperRecord) {
           // Convert Supabase data to app format
           const data = convertSupabaseToNewspaperData(newspaperRecord);
           setNewspaperData(data);
           setTotalPages(data.totalPages);
-          console.log('✅ API call successful, data received:', data);
+          console.log("✅ API call successful, data received:", data);
         } else {
           // No data found for this date, fallback to dummy data
-          console.log('⚠️ No data found for date, using fallback');
+          console.log("⚠️ No data found for date, using fallback");
           const data = await getNewspaper(dateString);
           setNewspaperData(data);
           setTotalPages(data.totalPages);
@@ -140,7 +147,6 @@ export function NewspaperApp() {
         // Always reset to first page when date changes
         setCurrentPage(1);
         setSelectedSection("front-page");
-        
       } catch (err) {
         console.error("Error fetching newspaper:", err);
         // Fallback to dummy data on error
@@ -170,20 +176,22 @@ export function NewspaperApp() {
     setLoading(true);
     try {
       const dateString = formatDateForAPI(selectedDate);
-      console.log('🔄 Refreshing pages for date:', dateString);
-      
+      console.log("🔄 Refreshing pages for date:", dateString);
+
       // Call Supabase API to get fresh newspaper data
-      const newspaperRecord = await newspaperService.getNewspaperByDate(dateString);
-      
+      const newspaperRecord = await newspaperService.getNewspaperByDate(
+        dateString
+      );
+
       if (newspaperRecord) {
         // Convert Supabase data to app format
         const data = convertSupabaseToNewspaperData(newspaperRecord);
         setNewspaperData(data);
         setTotalPages(data.totalPages);
-        
+
         // Always reset to first page when refreshing
         setCurrentPage(1);
-        
+
         toast({
           title: "Pages Refreshed",
           description: `Successfully loaded ${data.totalPages} pages for ${dateString}`,
@@ -192,16 +200,16 @@ export function NewspaperApp() {
         // No data found, fallback to dummy data
         const allPages = await getAllPagesForDate(dateString);
         if (allPages.length > 0) {
-          setNewspaperData(prev => ({
+          setNewspaperData((prev) => ({
             ...prev!,
             pages: allPages,
-            totalPages: allPages.length
+            totalPages: allPages.length,
           }));
           setTotalPages(allPages.length);
-          
+
           // Always reset to first page when refreshing
           setCurrentPage(1);
-          
+
           toast({
             title: "Pages Refreshed",
             description: `Successfully loaded ${allPages.length} pages for ${dateString}`,
@@ -215,7 +223,7 @@ export function NewspaperApp() {
         }
       }
     } catch (error) {
-      console.error('Error refreshing pages:', error);
+      console.error("Error refreshing pages:", error);
       toast({
         title: "Refresh Failed",
         description: "Failed to refresh newspaper pages",
@@ -229,14 +237,14 @@ export function NewspaperApp() {
   // Update section when page changes
   const handlePageChange = async (page: number) => {
     setCurrentPage(page);
-    
+
     // Use existing data from the API call - no new API call needed
     const pageData = newspaperData?.pages.find((p) => p.pageNumber === page);
     if (pageData) {
       setSelectedSection(pageData.section);
-      console.log('📄 Page changed to:', page, 'using existing data');
+      console.log("📄 Page changed to:", page, "using existing data");
     } else {
-      console.log('⚠️ Page data not found for page:', page);
+      console.log("⚠️ Page data not found for page:", page);
     }
   };
 
@@ -313,7 +321,7 @@ export function NewspaperApp() {
           <div className="flex-1 flex flex-col">
             <div className="flex items-center justify-center my-4">
               <img
-                src="src/assets/jawan-bharat-logo.jpg"
+                src={jawanBharatLogo}
                 alt="logo"
                 className="w-auto h-8 md:h-12 bg-transparent"
                 style={{ mixBlendMode: "darken" }}
@@ -369,7 +377,7 @@ export function NewspaperApp() {
           croppedImageData={croppedImageData}
           pageInfo={`Page ${currentPage} of ${totalPages} - Cropped Image`}
           pageNumber={currentPage}
-          date={selectedDate.toISOString().split('T')[0]}
+          date={selectedDate.toISOString().split("T")[0]}
         />
       </SidebarProvider>
     </div>

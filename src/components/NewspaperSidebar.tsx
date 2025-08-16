@@ -13,22 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Newspaper,
-  Bookmark,
-  Search,
-  Settings,
-  Archive,
-  TrendingUp,
-  Globe,
-  Building2,
-  Trophy,
-  Heart,
-  Zap,
-  FileText,
-  X,
-} from "lucide-react";
+import { Newspaper, Bookmark, TrendingUp, X } from "lucide-react";
 import { type NewspaperPage } from "@/lib/dummyApi";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
 
 interface SidebarProps {
   selectedSection: string;
@@ -75,13 +62,13 @@ export function NewspaperSidebar({
         {!isCollapsed && (
           <div className="flex justify-between p-2">
             <div className="mx-2 my-4">
-          <img
-            src="src/assets/jawan-bharat-logo.jpg"
-            alt="logo"
-            className="w-44 h-auto bg-transparent"
-            style={{ mixBlendMode: "darken" }}
-          />
-        </div>
+              <img
+                src={jawanBharatLogo}
+                alt="logo"
+                className="w-44 h-auto bg-transparent"
+                style={{ mixBlendMode: "darken" }}
+              />
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -93,9 +80,8 @@ export function NewspaperSidebar({
             </Button>
           </div>
         )}
-        
-      
-            <Separator  />
+
+        <Separator />
         {/* Newspaper Sections */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -105,9 +91,10 @@ export function NewspaperSidebar({
                   <SidebarMenuButton
                     onClick={() => onSectionChange(section.id)}
                     className={`
-                      ${selectedSection === section.id 
-                        ? "font-medium font-serif text-accent" 
-                        : " text-muted-foreground"
+                      ${
+                        selectedSection === section.id
+                          ? "font-medium font-serif text-accent"
+                          : " text-muted-foreground"
                       }
                       transition-smooth font-serif text-muted-foreground 
                     `}
@@ -120,8 +107,6 @@ export function NewspaperSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        
 
         {/* Quick Actions */}
         {/* <SidebarGroup>
@@ -148,7 +133,7 @@ export function NewspaperSidebar({
         {!isCollapsed && (
           <>
             <Separator className="" />
-            
+
             {/* Bookmarked Pages */}
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -163,7 +148,9 @@ export function NewspaperSidebar({
                   ) : (
                     <div className="space-y-1">
                       {bookmarkedPages.map((pageId) => {
-                        const pageData = pagesData?.find(p => p.pageNumber === pageId);
+                        const pageData = pagesData?.find(
+                          (p) => p.pageNumber === pageId
+                        );
                         return (
                           <Button
                             key={pageId}
@@ -205,17 +192,16 @@ export function NewspaperSidebar({
                 className="w-full"
                 onClick={() => onToggleBookmark(currentPage)}
               >
-                <Bookmark 
+                <Bookmark
                   className={`h-4 w-4 mr-2 ${
-                    bookmarkedPages.includes(currentPage) 
-                      ? "fill-current text-accent" 
+                    bookmarkedPages.includes(currentPage)
+                      ? "fill-current text-accent"
                       : ""
-                  }`} 
+                  }`}
                 />
-                {bookmarkedPages.includes(currentPage) 
-                  ? "Remove Bookmark" 
-                  : "Bookmark Page"
-                }
+                {bookmarkedPages.includes(currentPage)
+                  ? "Remove Bookmark"
+                  : "Bookmark Page"}
               </Button>
             </div>
           </>
