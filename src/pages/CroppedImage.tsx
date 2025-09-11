@@ -14,22 +14,34 @@ export function CroppedImage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setError("No image ID provided");
-      setLoading(false);
-      return;
-    }
+    const loadCroppedImage = async () => {
+      if (!id) {
+        setError("No image ID provided");
+        setLoading(false);
+        return;
+      }
 
-    const croppedImage = croppedImageService.getCroppedImage(id);
-    
-    if (croppedImage) {
-      setImageData(croppedImage.imageData);
-      setPageInfo(croppedImage.pageInfo || "");
-      setLoading(false);
-    } else {
-      setError("Image not found or has expired");
-      setLoading(false);
-    }
+      try {
+        const croppedImage = await croppedImageService.getCroppedImage(id);
+
+        if (croppedImage) {
+          // Prioritize Cloudinary URL if available, otherwise use local image data
+          const imageUrl = croppedImage.cloudinaryUrl || croppedImage.imageData;
+          setImageData(imageUrl);
+          setPageInfo(croppedImage.pageInfo || "");
+          setLoading(false);
+        } else {
+          setError("Image not found or has expired");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error loading cropped image:", error);
+        setError("Failed to load image");
+        setLoading(false);
+      }
+    };
+
+    loadCroppedImage();
   }, [id]);
 
   const handleDownload = () => {

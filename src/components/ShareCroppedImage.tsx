@@ -20,16 +20,29 @@ export function ShareCroppedImage({ isOpen, onClose, croppedImageData, pageInfo,
 
   // Generate shareable link when component opens
   useEffect(() => {
-    if (isOpen && croppedImageData) {
-      const imageId = croppedImageService.storeCroppedImage(
-        croppedImageData, 
-        pageInfo, 
-        pageNumber, 
-        date
-      );
-      const url = croppedImageService.generateShareableUrl(imageId);
-      setShareableUrl(url);
-    }
+    const uploadAndGenerateLink = async () => {
+      if (isOpen && croppedImageData) {
+        try {
+          // Upload image and get ID (now async)
+          const imageId = await croppedImageService.storeCroppedImage(
+            croppedImageData,
+            pageInfo,
+            pageNumber,
+            date
+          );
+          const url = croppedImageService.generateShareableUrl(imageId);
+          setShareableUrl(url);
+        } catch (error) {
+          console.error("Failed to upload cropped image:", error);
+          // Fallback: still generate URL even if upload fails
+          const imageId = Date.now().toString(); // Simple fallback ID
+          const url = croppedImageService.generateShareableUrl(imageId);
+          setShareableUrl(url);
+        }
+      }
+    };
+
+    uploadAndGenerateLink();
   }, [isOpen, croppedImageData, pageInfo, pageNumber, date]);
 
   const handleShare = async (platform: string) => {
