@@ -16,7 +16,6 @@ interface PageListDialogProps {
   totalPages: number;
   currentPage: number;
   onPageSelect: (page: number) => void;
-  bookmarkedPages: number[];
   newspaperData: NewspaperData;
 }
 
@@ -26,7 +25,6 @@ export function PageListDialog({
   totalPages,
   currentPage,
   onPageSelect,
-  bookmarkedPages,
   newspaperData,
 }: PageListDialogProps) {
   const handlePageClick = (page: number) => {
@@ -140,11 +138,6 @@ export function PageListDialog({
                       </div>
                     </div>
                   </div>
-
-                  {/* Bookmark indicator */}
-                  {bookmarkedPages.includes(page.pageNumber) && (
-                    <Bookmark className="absolute top-2 right-2 h-3 w-3 fill-accent text-accent" />
-                  )}
                 </div>
 
                 {/* Current page indicator */}
@@ -163,7 +156,6 @@ export function PageListDialog({
           <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>Total Pages: {totalPages}</span>
             <span>Current: {currentPage}</span>
-            <span>Bookmarked: {bookmarkedPages.length}</span>
           </div>
         </div>
       </DialogContent>

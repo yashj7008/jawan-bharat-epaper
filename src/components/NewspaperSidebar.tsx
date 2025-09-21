@@ -20,7 +20,6 @@ import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
 interface SidebarProps {
   selectedSection: string;
   onSectionChange: (section: string) => void;
-  bookmarkedPages: number[];
   onToggleBookmark: (page: number) => void;
   currentPage: number;
   pagesData?: NewspaperPage[];
@@ -47,7 +46,6 @@ const quickActions = [
 export function NewspaperSidebar({
   selectedSection,
   onSectionChange,
-  bookmarkedPages,
   onToggleBookmark,
   currentPage,
   pagesData,
@@ -107,105 +105,6 @@ export function NewspaperSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Quick Actions */}
-        {/* <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {!isCollapsed && "Tools"}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {quickActions.map((action) => (
-                <SidebarMenuItem key={action.id}>
-                  <SidebarMenuButton
-                    onClick={() => console.log(`${action.label} clicked`)}
-                    className="hover:bg-secondary transition-smooth"
-                  >
-                    <action.icon className="h-4 w-4" />
-                    {!isCollapsed && <span>{action.label}</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup> */}
-
-        {!isCollapsed && (
-          <>
-            <Separator className="" />
-
-            {/* Bookmarked Pages */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Bookmarks
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <ScrollArea className="h-48">
-                  {bookmarkedPages.length === 0 ? (
-                    <p className="text-xs text-muted-foreground p-2">
-                      No bookmarked pages
-                    </p>
-                  ) : (
-                    <div className="space-y-1">
-                      {bookmarkedPages.map((pageId) => {
-                        const pageData = pagesData?.find(
-                          (p) => p.pageNumber === pageId
-                        );
-                        return (
-                          <Button
-                            key={pageId}
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs"
-                            onClick={() => {
-                              // Navigate to the bookmarked page
-                              if (pageData) {
-                                onSectionChange(pageData.section);
-                              }
-                            }}
-                          >
-                            <Bookmark className="h-3 w-3 mr-2" />
-                            <div className="truncate text-left">
-                              <div className="font-medium">Page {pageId}</div>
-                              {pageData && (
-                                <div className="text-xs text-muted-foreground truncate">
-                                  {pageData.title}
-                                </div>
-                              )}
-                            </div>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </ScrollArea>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <Separator className="my-2" />
-
-            {/* Current Page Bookmark Toggle */}
-            <div className="p-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => onToggleBookmark(currentPage)}
-              >
-                <Bookmark
-                  className={`h-4 w-4 mr-2 ${
-                    bookmarkedPages.includes(currentPage)
-                      ? "fill-current text-accent"
-                      : ""
-                  }`}
-                />
-                {bookmarkedPages.includes(currentPage)
-                  ? "Remove Bookmark"
-                  : "Bookmark Page"}
-              </Button>
-            </div>
-          </>
-        )}
       </SidebarContent>
     </Sidebar>
   );

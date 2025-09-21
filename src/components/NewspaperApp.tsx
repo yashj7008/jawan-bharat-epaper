@@ -79,7 +79,6 @@ export function NewspaperApp() {
   const [isCropMode, setIsCropMode] = useState(false);
   const [croppedImageData, setCroppedImageData] = useState<string | null>(null);
   const [isShareCroppedOpen, setIsShareCroppedOpen] = useState(false);
-  const [bookmarkedPages, setBookmarkedPages] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);
@@ -260,11 +259,6 @@ export function NewspaperApp() {
     }
   };
 
-  const handleToggleBookmark = (page: number) => {
-    setBookmarkedPages((prev) =>
-      prev.includes(page) ? prev.filter((p) => p !== page) : [...prev, page]
-    );
-  };
 
   const handleCropComplete = (croppedImage: string) => {
     setCroppedImageData(croppedImage);
@@ -314,8 +308,6 @@ export function NewspaperApp() {
           <NewspaperSidebar
             selectedSection={selectedSection}
             onSectionChange={handleSectionChange}
-            bookmarkedPages={bookmarkedPages}
-            onToggleBookmark={handleToggleBookmark}
             currentPage={currentPage}
             pagesData={newspaperData.pages}
           />
@@ -369,7 +361,6 @@ export function NewspaperApp() {
           totalPages={totalPages}
           currentPage={currentPage}
           onPageSelect={handlePageChange}
-          bookmarkedPages={bookmarkedPages}
           newspaperData={newspaperData}
         />
 
