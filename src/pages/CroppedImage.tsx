@@ -214,11 +214,6 @@ export function CroppedImage() {
               </Button>
             </div>
           </div>
-
-          {/* Info */}
-          <div className="text-center text-sm text-muted-foreground">
-            <p>This link will expire in 24 hours for privacy and storage management.</p>
-          </div>
         </div>
       </div>
     </div>

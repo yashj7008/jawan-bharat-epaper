@@ -116,8 +116,11 @@ export function NewspaperApp() {
     (page) => page.pageNumber === currentPage
   );
 
-  // Fetch newspaper data when date changes
+  // Fetch newspaper data when date changes (only after URL processing is complete)
   useEffect(() => {
+    // Don't fetch until URL processing is complete
+    if (!initialUrlProcessed) return;
+
     const fetchNewspaper = async () => {
       setLoading(true);
       setError(null);
