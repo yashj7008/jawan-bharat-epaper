@@ -43,13 +43,8 @@ import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "./ui/sidebar";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useNavigate } from "react-router";
+import { getCurrentPageUrl } from "@/lib/commonFunctions";
 
 interface HeaderProps {
   currentPage: number;
@@ -117,30 +112,6 @@ export function Header({
     // Update URL without reloading the page
     window.history.replaceState({}, "", url.toString());
   }, [selectedDate, currentPage]);
-
-  // Get current URL with query parameters for sharing
-  const getCurrentPageUrl = () => {
-    const url = new URL(window.location.href);
-
-    // Format date consistently in Indian timezone
-    const formatDateForURL = (date: Date): string => {
-      try {
-        const indianDate = new Date(
-          date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-        );
-        const year = indianDate.getFullYear();
-        const month = String(indianDate.getMonth() + 1).padStart(2, "0");
-        const day = String(indianDate.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-      } catch (error) {
-        return date.toISOString().split("T")[0];
-      }
-    };
-
-    url.searchParams.set("date", formatDateForURL(selectedDate));
-    url.searchParams.set("page", currentPage.toString());
-    return url.toString();
-  };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) onPageChange(currentPage - 1);
@@ -269,7 +240,7 @@ export function Header({
   };
 
   const handleShare = (platform: string) => {
-    const currentUrl = getCurrentPageUrl(); // Use URL with query parameters
+    const currentUrl = getCurrentPageUrl(selectedDate, currentPage); // Use URL with query parameters
     const pageInfo = `Page ${currentPage} of Jawan Bharat Epaper`;
 
     switch (platform) {

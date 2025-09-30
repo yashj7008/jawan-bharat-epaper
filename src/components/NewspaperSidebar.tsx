@@ -13,14 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Newspaper, Bookmark, TrendingUp, X } from "lucide-react";
+import { Newspaper, TrendingUp, X } from "lucide-react";
 import { type NewspaperPage } from "@/lib/dummyApi";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
 
 interface SidebarProps {
   selectedSection: string;
   onSectionChange: (section: string) => void;
-  onToggleBookmark: (page: number) => void;
   currentPage: number;
   pagesData?: NewspaperPage[];
 }
@@ -38,7 +37,7 @@ const sections = [
 
 const quickActions = [
   // { id: "search", label: "Search Articles", icon: Search },
-  { id: "bookmarks", label: "My Bookmarks", icon: Bookmark },
+  // { id: "bookmarks", label: "My Bookmarks", icon: Bookmark },
   // { id: "archive", label: "Archive", icon: Archive },
   // { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -46,7 +45,6 @@ const quickActions = [
 export function NewspaperSidebar({
   selectedSection,
   onSectionChange,
-  onToggleBookmark,
   currentPage,
   pagesData,
 }: SidebarProps) {
