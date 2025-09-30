@@ -282,7 +282,7 @@ export function Header({
       <div className="flex items-center justify-center md:justify-between  px-4 border border-gray-100">
         {/* Left section: Home and Date */}
         <div className="hidden md:flex items-center space-x-4">
-          <SidebarTrigger className="mr-2" />
+          {/* <SidebarTrigger className="mr-2" /> */}
           {/* <Button
             variant="outline"
             size="sm"
@@ -361,7 +361,7 @@ export function Header({
         {/* Center section: Page navigation */}
         <div className="flex items-center space-x-3 md:ml-32">
           <div className="flex items-center space-x-2">
-            <SidebarTrigger className="mr-2 md:hidden" />
+            {/* <SidebarTrigger className="mr-2 md:hidden" /> */}
 
             {/* Mobile Date Picker */}
             <Popover
