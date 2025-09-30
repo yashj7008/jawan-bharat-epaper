@@ -351,6 +351,9 @@ export function NewspaperApp() {
                 totalPages={totalPages}
               />
             </div>
+            <div className="bg-[#595959] text-white text-center py-2">
+              Copyright © 2025 Jawan Bharat. All rights reserved.
+            </div>
           </div>
         </div>
 
