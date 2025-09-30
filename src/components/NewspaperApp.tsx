@@ -102,6 +102,7 @@ export function NewspaperApp() {
 
     if (pageParam) {
       const parsedPage = parseInt(pageParam);
+      console.log("Parsed page:", parsedPage);
       if (!isNaN(parsedPage) && parsedPage > 0) {
         setCurrentPage(parsedPage);
       }
@@ -147,7 +148,7 @@ export function NewspaperApp() {
         }
 
         // Always reset to first page when date changes
-        setCurrentPage(1);
+        // setCurrentPage(1);
         setSelectedSection("front-page");
       } catch (err) {
         console.error("Error fetching newspaper:", err);
@@ -192,7 +193,7 @@ export function NewspaperApp() {
         setTotalPages(data.totalPages);
 
         // Always reset to first page when refreshing
-        setCurrentPage(1);
+        // setCurrentPage(1);
 
         toast({
           title: "Pages Refreshed",
@@ -210,7 +211,7 @@ export function NewspaperApp() {
           setTotalPages(allPages.length);
 
           // Always reset to first page when refreshing
-          setCurrentPage(1);
+          // setCurrentPage(1);
 
           toast({
             title: "Pages Refreshed",
@@ -259,6 +260,10 @@ export function NewspaperApp() {
     }
   };
 
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+    setCurrentPage(1);
+  };
 
   const handleCropComplete = (croppedImage: string) => {
     setCroppedImageData(croppedImage);
@@ -305,12 +310,12 @@ export function NewspaperApp() {
       <SidebarProvider>
         <div className="flex min-h-screen w-full">
           {/* Sidebar */}
-          <NewspaperSidebar
+          {/* <NewspaperSidebar
             selectedSection={selectedSection}
             onSectionChange={handleSectionChange}
             currentPage={currentPage}
             pagesData={newspaperData.pages}
-          />
+          /> */}
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
@@ -329,7 +334,7 @@ export function NewspaperApp() {
               zoom={zoom}
               onZoomChange={setZoom}
               selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
+              onDateChange={handleDateChange}
               onShowPageList={() => setShowPageList(true)}
               isCropMode={isCropMode}
               onCropModeChange={setIsCropMode}

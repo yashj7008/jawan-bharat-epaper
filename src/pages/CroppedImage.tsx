@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Share2, Home } from "lucide-react";
 import { croppedImageService } from "@/lib/croppedImageService";
 import { toast } from "@/components/ui/use-toast";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
 
 export function CroppedImage() {
   const { id } = useParams<{ id: string }>();
@@ -46,14 +47,14 @@ export function CroppedImage() {
 
   const handleDownload = () => {
     if (!imageData) return;
-    
-    const link = document.createElement('a');
+
+    const link = document.createElement("a");
     link.href = imageData;
     link.download = `cropped-newspaper-${id}-${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast({
       title: "Download Started",
       description: "Cropped image download has begun",
@@ -67,19 +68,25 @@ export function CroppedImage() {
     switch (platform) {
       case "facebook":
         window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(shareText)}`,
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            currentUrl
+          )}&quote=${encodeURIComponent(shareText)}`,
           "_blank"
         );
         break;
       case "twitter":
         window.open(
-          `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareText)}`,
+          `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+            currentUrl
+          )}&text=${encodeURIComponent(shareText)}`,
           "_blank"
         );
         break;
       case "whatsapp":
         window.open(
-          `https://wa.me/?text=${encodeURIComponent(`${shareText} - ${currentUrl}`)}`,
+          `https://wa.me/?text=${encodeURIComponent(
+            `${shareText} - ${currentUrl}`
+          )}`,
           "_blank"
         );
         break;
@@ -112,7 +119,8 @@ export function CroppedImage() {
           <div className="text-6xl mb-4">🖼️</div>
           <h1 className="text-2xl font-bold mb-2">Image Not Found</h1>
           <p className="text-muted-foreground mb-6">
-            {error || "The cropped image you're looking for doesn't exist or has expired."}
+            {error ||
+              "The cropped image you're looking for doesn't exist or has expired."}
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={() => navigate("/")} variant="outline">
@@ -133,16 +141,20 @@ export function CroppedImage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-paper paper-shadow border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className=" mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button onClick={() => navigate("/")} variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Newspaper
               </Button>
-              <h1 className="text-lg font-semibold">Cropped Image</h1>
             </div>
-            
+            <img
+              src={jawanBharatLogo}
+              alt="logo"
+              className="w-auto h-8 md:h-12 bg-transparent"
+              style={{ mixBlendMode: "darken" }}
+            />
             <div className="flex items-center gap-2">
               <Button onClick={handleDownload} variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
@@ -186,7 +198,7 @@ export function CroppedImage() {
                 <span className="text-blue-600">f</span>
                 Facebook
               </Button>
-              
+
               <Button
                 onClick={() => handleShare("twitter")}
                 variant="outline"
@@ -195,7 +207,7 @@ export function CroppedImage() {
                 <span className="text-blue-400">𝕏</span>
                 Twitter
               </Button>
-              
+
               <Button
                 onClick={() => handleShare("whatsapp")}
                 variant="outline"
@@ -203,7 +215,7 @@ export function CroppedImage() {
               >
                 <span className="text-green-600">WhatsApp</span>
               </Button>
-              
+
               <Button
                 onClick={() => handleShare("copy")}
                 variant="outline"
