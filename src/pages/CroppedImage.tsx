@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Share2, Home } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Share2,
+  Home,
+  Facebook,
+  Twitter,
+  MessageCircle,
+  Copy,
+} from "lucide-react";
 import { croppedImageService } from "@/lib/croppedImageService";
 import { toast } from "@/components/ui/use-toast";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
@@ -139,92 +148,119 @@ export function CroppedImage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       {/* Header */}
-      <div className="bg-paper paper-shadow border-b">
-        <div className=" mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button onClick={() => navigate("/")} variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Newspaper
+      <div className="fixed top-0 left-0 right-0 bg-paper paper-shadow border-b">
+        <div className="mx-auto px-4 py-4">
+          <div className="relative flex items-center">
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => navigate("/")}
+                variant="ghost"
+                size="sm"
+                className="text-xs sm:text-sm hover:bg-white hover:text-black"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Newspaper</span>
+                <span className="sm:hidden">Back</span>
               </Button>
             </div>
-            <img
-              src={jawanBharatLogo}
-              alt="logo"
-              className="w-auto h-8 md:h-12 bg-transparent"
-              style={{ mixBlendMode: "darken" }}
-            />
-            <div className="flex items-center gap-2">
-              <Button onClick={handleDownload} variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+            <div
+              onClick={() => navigate("/")}
+              className="absolute left-1/2 transform -translate-x-1/2"
+            >
+              <img
+                src={jawanBharatLogo}
+                alt="logo"
+                className="w-auto h-6 sm:h-8 md:h-12 bg-transparent"
+                style={{ mixBlendMode: "darken" }}
+              />
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="space-y-6">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
+        <div className="space-y-4 sm:space-y-6">
           {/* Page Info */}
           {pageInfo && (
             <div className="text-center">
-              <p className="text-muted-foreground">{pageInfo}</p>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                {pageInfo}
+              </p>
             </div>
           )}
 
-          {/* Image Display */}
-          <div className="flex justify-center">
-            <div className="bg-paper paper-shadow rounded-lg p-6 max-w-4xl">
-              <img
-                src={imageData}
-                alt="Cropped newspaper image"
-                className="max-w-full h-auto rounded border"
-              />
-            </div>
-          </div>
+          {/* Image and Share Section */}
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start justify-center">
+            {/* Image Display */}
+            <div className="flex-1 flex justify-center items-start md:flex-row flex-col gap-3">
+              <div className="bg-paper paper-shadow rounded-lg p-3 sm:p-6 max-w-4xl w-full">
+                <img
+                  src={imageData}
+                  alt="Cropped newspaper image"
+                  className="w-full h-auto rounded border"
+                />
+              </div>
+              {/* Share Options - Right side on desktop, below on mobile */}
+              <div className="flex lg:flex-col gap-3 lg:gap-4 justify-center lg:justify-start items-center lg:items-start">
+                <div className="text-center lg:text-left mb-2 lg:mb-4 w-full">
+                  <h3 className="text-sm sm:text-lg font-medium text-muted-foreground">
+                    Share
+                  </h3>
+                </div>
 
-          {/* Share Options */}
-          <div className="text-center">
-            <h3 className="text-lg font-medium mb-4">Share this image</h3>
-            <div className="flex gap-3 justify-center flex-wrap">
-              <Button
-                onClick={() => handleShare("facebook")}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <span className="text-blue-600">f</span>
-                Facebook
-              </Button>
+                <div className="flex lg:flex-col gap-3 lg:gap-4">
+                  <Button
+                    onClick={handleDownload}
+                    variant="outline"
+                    size="sm"
+                    className="w-10 h-10 p-0 hover:bg-blue-50 hover:border-blue-300"
+                  >
+                    <Download className="h-4 w-4 text-blue-600" />
+                  </Button>
+                  <Button
+                    onClick={() => handleShare("facebook")}
+                    variant="outline"
+                    size="sm"
+                    className="w-10 h-10 p-0 hover:bg-blue-50 hover:border-blue-300"
+                    title="Share on Facebook"
+                  >
+                    <Facebook className="h-4 w-4 text-blue-600" />
+                  </Button>
 
-              <Button
-                onClick={() => handleShare("twitter")}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <span className="text-blue-400">𝕏</span>
-                Twitter
-              </Button>
+                  <Button
+                    onClick={() => handleShare("twitter")}
+                    variant="outline"
+                    size="sm"
+                    className="w-10 h-10 p-0 hover:bg-blue-50 hover:border-blue-400"
+                    title="Share on Twitter"
+                  >
+                    <Twitter className="h-4 w-4 text-blue-400" />
+                  </Button>
 
-              <Button
-                onClick={() => handleShare("whatsapp")}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <span className="text-green-600">WhatsApp</span>
-              </Button>
+                  <Button
+                    onClick={() => handleShare("whatsapp")}
+                    variant="outline"
+                    size="sm"
+                    className="w-10 h-10 p-0 hover:bg-green-50 hover:border-green-500"
+                    title="Share on WhatsApp"
+                  >
+                    <MessageCircle className="h-4 w-4 text-green-600" />
+                  </Button>
 
-              <Button
-                onClick={() => handleShare("copy")}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Share2 className="h-4 w-4" />
-                Copy Link
-              </Button>
+                  <Button
+                    onClick={() => handleShare("copy")}
+                    variant="outline"
+                    size="sm"
+                    className="w-10 h-10 p-0 hover:bg-gray-50 hover:border-gray-400"
+                    title="Copy Link"
+                  >
+                    <Copy className="h-4 w-4 text-gray-600" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
