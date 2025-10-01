@@ -18,7 +18,6 @@ interface NewspaperViewerProps {
   onCropComplete: (croppedImageData: string) => void;
   isCropMode: boolean;
   onCropModeChange: (isCropMode: boolean) => void;
-  onPageChange: (page: number) => void;
   totalPages: number;
 }
 
@@ -398,33 +397,6 @@ export function NewspaperViewer({
         </div>
       </ScrollArea>
 
-      {/* Left Navigation Bar - Positioned within container bounds */}
-      {currentPage > 1 && (
-        <div
-          className="absolute left-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
-          onClick={() => onPageChange(currentPage - 1)}
-        >
-          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-r-lg p-2 backdrop-blur-sm">
-            <div className="flex items-center justify-center">
-              <ChevronLeft className="h-6 w-6 text-white drop-shadow-lg" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Right Navigation Bar - Positioned within container bounds */}
-      {currentPage < totalPages && (
-        <div
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
-          onClick={() => onPageChange(currentPage + 1)}
-        >
-          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-l-lg p-2 backdrop-blur-sm">
-            <div className="flex items-center justify-center">
-              <ChevronRight className="h-6 w-6 text-white drop-shadow-lg" />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

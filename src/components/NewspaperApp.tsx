@@ -15,6 +15,7 @@ import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Helper function to format dates consistently in Indian timezone
 const formatDateForAPI = (date: Date): string => {
@@ -306,82 +307,108 @@ export function NewspaperApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          {/* Sidebar */}
-          {/* <NewspaperSidebar
+    <div className="min-h-screen bg-background relative">
+      {/* <SidebarProvider> */}
+      <div className="flex min-h-screen w-full">
+        {/* Sidebar */}
+        {/* <NewspaperSidebar
             selectedSection={selectedSection}
             onSectionChange={handleSectionChange}
             currentPage={currentPage}
             pagesData={newspaperData.pages}
           /> */}
 
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-center my-4">
-              <img
-                src={jawanBharatLogo}
-                alt="logo"
-                className="w-auto h-8 md:h-12 bg-transparent"
-                style={{ mixBlendMode: "darken" }}
-              />
-            </div>
-            <Header
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center justify-center my-4">
+            <img
+              src={jawanBharatLogo}
+              alt="logo"
+              className="w-auto h-8 md:h-12 bg-transparent"
+              style={{ mixBlendMode: "darken" }}
+            />
+          </div>
+          <Header
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            zoom={zoom}
+            onZoomChange={setZoom}
+            selectedDate={selectedDate}
+            onDateChange={handleDateChange}
+            onShowPageList={() => setShowPageList(true)}
+            isCropMode={isCropMode}
+            onCropModeChange={setIsCropMode}
+            onRefreshPages={refreshAllPages}
+            isRefreshing={loading}
+            currentPageData={currentPageData}
+          />
+
+          <div className="flex-1 flex">
+            <NewspaperViewer
               currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
               zoom={zoom}
-              onZoomChange={setZoom}
-              selectedDate={selectedDate}
-              onDateChange={handleDateChange}
-              onShowPageList={() => setShowPageList(true)}
+              selectedSection={selectedSection}
+              newspaperData={newspaperData}
+              onCropComplete={handleCropComplete}
               isCropMode={isCropMode}
               onCropModeChange={setIsCropMode}
-              onRefreshPages={refreshAllPages}
-              isRefreshing={loading}
-              currentPageData={currentPageData}
+              totalPages={totalPages}
             />
-
-            <div className="flex-1 flex">
-              <NewspaperViewer
-                currentPage={currentPage}
-                zoom={zoom}
-                selectedSection={selectedSection}
-                newspaperData={newspaperData}
-                onCropComplete={handleCropComplete}
-                isCropMode={isCropMode}
-                onCropModeChange={setIsCropMode}
-                onPageChange={handlePageChange}
-                totalPages={totalPages}
-              />
-            </div>
-            <div className="bg-[#595959] text-white text-center py-2">
-              Copyright © 2025 Jawan Bharat. All rights reserved.
+          </div>
+          <div className="bg-[#595959] text-white text-center py-2">
+            Copyright © 2025 Jawan Bharat. All rights reserved.
+          </div>
+        </div>
+      </div>
+      <div className="fixed  bg-green-400 text-4xl">ome</div>
+      {/* Left Navigation Bar - Positioned within container bounds */}
+      {currentPage > 1 && (
+        <div
+          className="fixed left-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-r-lg p-2 backdrop-blur-sm">
+            <div className="flex items-center justify-center">
+              <ChevronLeft className="h-6 w-6 text-white drop-shadow-lg" />
             </div>
           </div>
         </div>
+      )}
 
-        {/* Page list dialog */}
-        <PageListDialog
-          open={showPageList}
-          onOpenChange={setShowPageList}
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageSelect={handlePageChange}
-          newspaperData={newspaperData}
-        />
+      {/* Right Navigation Bar - Positioned within container bounds */}
+      {currentPage < totalPages && (
+        <div
+          className="fixed right-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-l-lg p-2 backdrop-blur-sm">
+            <div className="flex items-center justify-center">
+              <ChevronRight className="h-6 w-6 text-white drop-shadow-lg" />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Page list dialog */}
+      <PageListDialog
+        open={showPageList}
+        onOpenChange={setShowPageList}
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageSelect={handlePageChange}
+        newspaperData={newspaperData}
+      />
 
-        {/* Share Cropped Image Dialog */}
-        <ShareCroppedImage
-          isOpen={isShareCroppedOpen}
-          onClose={() => setIsShareCroppedOpen(false)}
-          croppedImageData={croppedImageData}
-          pageInfo={`Page ${currentPage} of ${totalPages} - Cropped Image`}
-          pageNumber={currentPage}
-          date={selectedDate.toISOString().split("T")[0]}
-        />
-      </SidebarProvider>
+      {/* Share Cropped Image Dialog */}
+      <ShareCroppedImage
+        isOpen={isShareCroppedOpen}
+        onClose={() => setIsShareCroppedOpen(false)}
+        croppedImageData={croppedImageData}
+        pageInfo={`Page ${currentPage} of ${totalPages} - Cropped Image`}
+        pageNumber={currentPage}
+        date={selectedDate.toISOString().split("T")[0]}
+      />
+      {/* </SidebarProvider> */}
     </div>
   );
 }
