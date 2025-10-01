@@ -139,7 +139,6 @@ export function NewspaperApp() {
           const data = convertSupabaseToNewspaperData(newspaperRecord);
           setNewspaperData(data);
           setTotalPages(data.totalPages);
-          console.log("✅ API call successful, data received:", data);
         } else {
           // No data found for this date, fallback to dummy data
           console.log("⚠️ No data found for date, using fallback");
@@ -246,7 +245,6 @@ export function NewspaperApp() {
     const pageData = newspaperData?.pages.find((p) => p.pageNumber === page);
     if (pageData) {
       setSelectedSection(pageData.section);
-      console.log("📄 Page changed to:", page, "using existing data");
     } else {
       console.log("⚠️ Page data not found for page:", page);
     }
@@ -404,7 +402,7 @@ export function NewspaperApp() {
         isOpen={isShareCroppedOpen}
         onClose={() => setIsShareCroppedOpen(false)}
         croppedImageData={croppedImageData}
-        pageInfo={`Page ${currentPage} of ${totalPages} - Cropped Image`}
+        pageInfo={`Page ${currentPage} of ${totalPages}`}
         pageNumber={currentPage}
         date={selectedDate.toISOString().split("T")[0]}
       />
