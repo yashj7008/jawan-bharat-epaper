@@ -18,6 +18,7 @@ interface NewspaperViewerProps {
   onCropComplete: (croppedImageData: string) => void;
   isCropMode: boolean;
   onCropModeChange: (isCropMode: boolean) => void;
+  onPageChange?: (page: number) => void;
   totalPages: number;
 }
 
@@ -29,20 +30,33 @@ export function NewspaperViewer({
   onCropComplete,
   isCropMode,
   onCropModeChange,
+  onPageChange,
   totalPages,
 }: NewspaperViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const [crop, setCrop] = useState<CropType>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
+    // Add transition effect when page changes
+    setIsTransitioning(true);
+    setImageLoaded(false);
+
     // Reset scroll position when page changes
     if (viewerRef.current) {
       viewerRef.current.scrollTop = 0;
       viewerRef.current.scrollLeft = 0;
     }
+
+    // Remove transition after a short delay
+    const timer = setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [currentPage]);
 
   // Set initial crop when entering crop mode
@@ -116,6 +130,8 @@ export function NewspaperViewer({
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     setImageLoaded(true);
+    // End transition when image is loaded
+    setTimeout(() => setIsTransitioning(false), 100);
 
     // Set a smaller default crop size when image loads
     const imgWidth = img.naturalWidth;
@@ -336,7 +352,25 @@ export function NewspaperViewer({
               {/* Page Content */}
               <div className="min-w-4xl">
                 {/* Page Content */}
-                <div className="space-y-6 min-h-[70vh]">
+                {/* Loading overlay during transition */}
+                {isTransitioning && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <p className="text-sm text-muted-foreground">
+                        Loading page {currentPage}...
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={`space-y-6 min-h-[70vh] transition-all duration-300 ease-in-out ${
+                    isTransitioning
+                      ? "opacity-0 scale-95"
+                      : "opacity-100 scale-100"
+                  }`}
+                >
                   {isCropMode ? (
                     /* Crop Mode: Image with ReactCrop */
                     <div className="w-full">
@@ -388,7 +422,13 @@ export function NewspaperViewer({
               </div> */}
 
               {/* Page number indicator */}
-              <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+              <div
+                className={`absolute bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
+                  isTransitioning
+                    ? "opacity-0 translate-y-2"
+                    : "opacity-100 translate-y-0"
+                }`}
+              >
                 Page {currentPage}
               </div>
             </div>
