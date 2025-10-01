@@ -122,7 +122,7 @@ export function ShareCroppedImage({ isOpen, onClose, croppedImageData, pageInfo,
             Share Cropped Image
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Preview of cropped image */}
           <div className="border rounded-lg p-4 bg-muted">
@@ -133,7 +133,7 @@ export function ShareCroppedImage({ isOpen, onClose, croppedImageData, pageInfo,
               className="max-w-full h-auto max-h-44 mx-auto rounded border"
             />
           </div>
-          
+
           {/* Page info */}
           {pageInfo && (
             <div className="text-sm text-muted-foreground text-center">
@@ -143,11 +143,13 @@ export function ShareCroppedImage({ isOpen, onClose, croppedImageData, pageInfo,
 
           {/* Shareable Link */}
           <div className="border rounded-lg p-3 bg-muted">
-            <div className="text-sm text-muted-foreground mb-2">Shareable Link:</div>
+            <div className="text-sm text-muted-foreground mb-2">
+              Shareable Link:
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={shareableUrl}
+                value={shareableUrl ? shareableUrl : "Loading..."}
                 readOnly
                 className="flex-1 px-3 py-2 text-sm border rounded bg-background"
               />
@@ -157,39 +159,39 @@ export function ShareCroppedImage({ isOpen, onClose, croppedImageData, pageInfo,
               </Button>
             </div>
           </div>
-          
+
           {/* Share options */}
           <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => handleShare('facebook')}
+            <Button
+              variant="outline"
+              onClick={() => handleShare("facebook")}
               className="flex items-center gap-2"
             >
               <Facebook className="h-4 w-4 text-blue-600" />
               Share on Facebook
             </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => handleShare('twitter')}
+
+            <Button
+              variant="outline"
+              onClick={() => handleShare("twitter")}
               className="flex items-center gap-2"
             >
               <Twitter className="h-4 w-4 text-blue-400" />
               Share on Twitter
             </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => handleShare('whatsapp')}
+
+            <Button
+              variant="outline"
+              onClick={() => handleShare("whatsapp")}
               className="flex items-center gap-2"
             >
               <MessageCircle className="h-4 w-4 text-green-600" />
               Share on WhatsApp
             </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => handleShare('copy')}
+
+            <Button
+              variant="outline"
+              onClick={() => handleShare("copy")}
               className="flex items-center gap-2"
             >
               {isLinkCopied ? (
@@ -205,7 +207,7 @@ export function ShareCroppedImage({ isOpen, onClose, croppedImageData, pageInfo,
               )}
             </Button>
           </div>
-          
+
           {/* Download button */}
           <Button onClick={handleDownload} className="w-full">
             <Download className="h-4 w-4 mr-2" />

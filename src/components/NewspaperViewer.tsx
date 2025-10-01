@@ -29,7 +29,6 @@ export function NewspaperViewer({
   onCropComplete,
   isCropMode,
   onCropModeChange,
-  onPageChange,
   totalPages,
 }: NewspaperViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -301,32 +300,32 @@ export function NewspaperViewer({
             {/* Page Controls */}
             {/* Crop button removed - using header's crop button instead */}
 
-            {/* Crop Mode Controls */}
-            {isCropMode && (
-              <div className="absolute top-4 left-4 z-10 bg-white/95 p-3 rounded-lg border shadow-lg">
-                {/* <div className="text-sm text-muted-foreground mb-2">
-                  {completedCrop ? (
-                    `Crop Area: ${Math.round(completedCrop.width)} × ${Math.round(completedCrop.height)} pixels`
-                  ) : (
-                    "Drag to select crop area"
-                  )}
-                </div> */}
-                <div className="flex gap-2">
+            {/* Crop Mode Controls - Positioned at bottom-right of crop selection */}
+            {isCropMode && completedCrop && (
+              <div
+                className="absolute z-20 bg-white/95 p-1 rounded-lg border shadow-lg"
+                style={{
+                  left: `${completedCrop.x + completedCrop.width - 70}px`,
+                  top: `${completedCrop.y + completedCrop.height + 5}px`,
+                }}
+              >
+                <div className="flex gap-1">
                   <Button
                     onClick={handleCrop}
-                    disabled={!completedCrop}
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center h-7 w-7 p-0 bg-green-600 hover:bg-green-700 text-white"
+                    title="Accept crop"
                   >
-                    <Check className="h-4 w-4" />
+                    <Check className="h-3 w-3" />
                   </Button>
                   <Button
                     onClick={handleCancelCrop}
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center h-7 w-7 p-0 border-red-300 text-red-600 hover:bg-red-50"
+                    title="Cancel crop"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
@@ -396,7 +395,6 @@ export function NewspaperViewer({
           </div>
         </div>
       </ScrollArea>
-
     </div>
   );
 }
