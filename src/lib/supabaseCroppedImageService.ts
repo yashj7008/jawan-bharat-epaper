@@ -73,6 +73,7 @@ class SupabaseCroppedImageService {
   // Get cropped image by Cloudinary key (public_id)
   async getCroppedImageByCloudinaryKey(cloudinaryKey: string): Promise<{ success: boolean; data?: CroppedImageRecord; error?: string }> {
     try {
+        console.log("cloudinaryKey", cloudinaryKey);
       const { data, error } = await supabase
         .from(this.tableName)
         .select('*')

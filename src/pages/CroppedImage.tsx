@@ -23,6 +23,7 @@ export function CroppedImage() {
       }
 
       try {
+        console.log("id", id);
         const croppedImage = await croppedImageService.getCroppedImage(id);
 
         if (croppedImage) {

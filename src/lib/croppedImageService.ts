@@ -2,6 +2,7 @@
 // Updated to use Cloudinary storage instead of localStorage for better sharing capabilities
 
 import { cloudinaryCroppedService } from './cloudinaryCroppedService';
+import { supabaseCroppedImageService } from "./supabaseCroppedImageService";
 
 interface CroppedImageData {
   id: string;
@@ -15,7 +16,7 @@ interface CroppedImageData {
 }
 
 class CroppedImageService {
-  private storageKey = 'cropped-images';
+  private storageKey = "cropped-images";
   private images: Map<string, CroppedImageData> = new Map();
 
   constructor() {
@@ -29,7 +30,12 @@ class CroppedImageService {
 
   // Store a new cropped image and return its ID
   // Updated to use S3 storage with localStorage as fallback
-  async storeCroppedImage(imageData: string, pageInfo?: string, pageNumber?: number, date?: string): Promise<string> {
+  async storeCroppedImage(
+    imageData: string,
+    pageInfo?: string,
+    pageNumber?: number,
+    date?: string
+  ): Promise<string> {
     const id = this.generateId();
     const croppedImage: CroppedImageData = {
       id,
@@ -37,27 +43,37 @@ class CroppedImageService {
       pageInfo,
       createdAt: new Date(),
       pageNumber,
-      date
+      date,
     };
 
     // Try to upload to Cloudinary first
     if (cloudinaryCroppedService.isConfigured()) {
       try {
-        const uploadResult = await cloudinaryCroppedService.uploadCroppedImage(id, imageData, {
-          pageInfo,
-          pageNumber,
-          date
-        });
+        const uploadResult = await cloudinaryCroppedService.uploadCroppedImage(
+          id,
+          imageData,
+          {
+            pageInfo,
+            pageNumber,
+            date,
+          }
+        );
 
         if (uploadResult.success && uploadResult.url) {
           croppedImage.cloudinaryUrl = uploadResult.url;
           croppedImage.cloudinaryPublicId = uploadResult.publicId;
-          console.log('Image uploaded to Cloudinary:', uploadResult.url);
+          console.log("Image uploaded to Cloudinary:", uploadResult.url);
         } else {
-          console.warn('Cloudinary upload failed, using localStorage fallback:', uploadResult.error);
+          console.warn(
+            "Cloudinary upload failed, using localStorage fallback:",
+            uploadResult.error
+          );
         }
       } catch (error) {
-        console.warn('Cloudinary upload error, using localStorage fallback:', error);
+        console.warn(
+          "Cloudinary upload error, using localStorage fallback:",
+          error
+        );
       }
     }
 
@@ -92,7 +108,7 @@ class CroppedImageService {
   async getCroppedImage(id: string): Promise<CroppedImageData | null> {
     // First, try to get from localStorage
     const localImage = this.images.get(id);
-    
+
     if (localImage) {
       // If we have Cloudinary URL, prioritize it
       if (localImage.cloudinaryUrl) {
@@ -102,27 +118,35 @@ class CroppedImageService {
       return localImage;
     }
 
-    // If not in localStorage, try to check if it exists in Cloudinary
-    if (cloudinaryCroppedService.isConfigured()) {
-      try {
-        const cloudinaryImage = await cloudinaryCroppedService.getCroppedImageInfo(id);
-        
-        if (cloudinaryImage) {
-          // Create a virtual image data object from Cloudinary
-          return {
-            id,
-            imageData: '', // Empty since we'll use Cloudinary URL
-            cloudinaryUrl: cloudinaryImage.secure_url,
-            cloudinaryPublicId: cloudinaryImage.public_id,
-            pageInfo: cloudinaryImage.context?.page_info || '', // Get from context metadata
-            createdAt: new Date(), // Approximate - could parse from context
-            pageNumber: cloudinaryImage.context?.page_number ? parseInt(cloudinaryImage.context.page_number) : undefined,
-            date: cloudinaryImage.context?.date || undefined
-          };
-        }
-      } catch (error) {
-        console.warn('Error checking Cloudinary for image:', error);
+    // If not in localStorage, try to get from Supabase using the generated public ID
+    try {
+      // Generate the public ID that would have been used for this image
+      const publicId = `cropped-images/${id}`;
+      const supabaseResult =
+        await supabaseCroppedImageService.getCroppedImageByCloudinaryKey(
+          publicId
+        );
+
+      console.log("supabaseResult", supabaseResult);
+
+      if (supabaseResult.success && supabaseResult.data) {
+        const dbImage = supabaseResult.data;
+        // Create a virtual image data object from Supabase data
+        return {
+          id,
+          imageData: "", // Empty since we'll use Cloudinary URL
+          cloudinaryUrl: dbImage.cloudinaryUrl,
+          cloudinaryPublicId: dbImage.cloudinaryKey,
+          pageInfo: dbImage.pageInfo || "",
+          createdAt: dbImage.created_at
+            ? new Date(dbImage.created_at)
+            : new Date(),
+          pageNumber: dbImage.pageNumber || undefined,
+          date: dbImage.newsPaperDate || undefined,
+        };
       }
+    } catch (error) {
+      console.warn("Error checking Supabase for image:", error);
     }
 
     return null;
@@ -153,26 +177,26 @@ class CroppedImageService {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const imagesToDelete: string[] = [];
-    
+
     for (const [id, image] of this.images.entries()) {
       if (image.createdAt < oneDayAgo) {
         imagesToDelete.push(id);
         this.images.delete(id);
-        
+
         // Also delete from Cloudinary if it exists
         if (image.cloudinaryUrl && cloudinaryCroppedService.isConfigured()) {
           try {
             await cloudinaryCroppedService.deleteCroppedImage(id);
-            console.log('Deleted old image from Cloudinary:', id);
+            console.log("Deleted old image from Cloudinary:", id);
           } catch (error) {
-            console.warn('Failed to delete image from Cloudinary:', id, error);
+            console.warn("Failed to delete image from Cloudinary:", id, error);
           }
         }
       }
     }
-    
+
     this.saveToStorage();
-    
+
     if (imagesToDelete.length > 0) {
       console.log(`Cleaned up ${imagesToDelete.length} old cropped images`);
     }
@@ -201,7 +225,7 @@ class CroppedImageService {
       const data = Array.from(this.images.entries());
       localStorage.setItem(this.storageKey, JSON.stringify(data));
     } catch (error) {
-      console.error('Failed to save cropped images to storage:', error);
+      console.error("Failed to save cropped images to storage:", error);
     }
   }
 
@@ -214,7 +238,7 @@ class CroppedImageService {
         this.images = new Map(data);
       }
     } catch (error) {
-      console.error('Failed to load cropped images from storage:', error);
+      console.error("Failed to load cropped images from storage:", error);
     }
   }
 }
