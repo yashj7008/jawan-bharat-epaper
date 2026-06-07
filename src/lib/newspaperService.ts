@@ -29,6 +29,21 @@ export interface NewspaperRecord {
   date_of_paper: string;
   pages: NewspaperData;
   created_at: string;
+  updated_at?: string | null;
+}
+
+export interface NewspaperListOptions {
+  search?: string;
+  sort?: 'date_desc' | 'date_asc' | 'created_desc' | 'created_asc';
+  page?: number;
+  limit?: number;
+}
+
+export interface NewspaperListResponse {
+  items: NewspaperRecord[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export class NewspaperService {
@@ -160,6 +175,119 @@ export class NewspaperService {
       },
       pages
     };
+  }
+
+  private getSupabaseClient() {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration is missing');
+    }
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+
+  // List newspapers with search, sort, and pagination
+  async listNewspapers(options: NewspaperListOptions = {}): Promise<NewspaperListResponse> {
+    const {
+      search = '',
+      sort = 'date_desc',
+      page = 1,
+      limit = 10,
+    } = options;
+
+    const supabase = this.getSupabaseClient();
+    const offset = (page - 1) * limit;
+
+    let query = supabase.from('newspaper').select('*', { count: 'exact' });
+
+    if (search.trim()) {
+      query = query.ilike('date_of_paper', `%${search.trim()}%`);
+    }
+
+    switch (sort) {
+      case 'date_asc':
+        query = query.order('date_of_paper', { ascending: true });
+        break;
+      case 'created_desc':
+        query = query.order('created_at', { ascending: false });
+        break;
+      case 'created_asc':
+        query = query.order('created_at', { ascending: true });
+        break;
+      case 'date_desc':
+      default:
+        query = query.order('date_of_paper', { ascending: false });
+        break;
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1);
+
+    if (error) {
+      throw new Error(`Failed to list newspapers: ${error.message}`);
+    }
+
+    return {
+      items: data ?? [],
+      total: count ?? 0,
+      page,
+      limit,
+    };
+  }
+
+  // Get newspaper by ID
+  async getNewspaperById(id: string): Promise<NewspaperRecord | null> {
+    try {
+      const supabase = this.getSupabaseClient();
+
+      const { data, error } = await supabase
+        .from('newspaper')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw new Error(`Failed to fetch newspaper: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching newspaper by id:', error);
+      return null;
+    }
+  }
+
+  // Update existing newspaper record
+  async updateNewspaper(id: string, pages: NewspaperData): Promise<NewspaperRecord> {
+    const supabase = this.getSupabaseClient();
+
+    const { data, error } = await supabase
+      .from('newspaper')
+      .update({ pages })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update newspaper: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('No data returned from database');
+    }
+
+    return data;
+  }
+
+  // Hard delete newspaper record from Supabase
+  async deleteNewspaper(id: string): Promise<void> {
+    const supabase = this.getSupabaseClient();
+
+    const { error } = await supabase.from('newspaper').delete().eq('id', id);
+
+    if (error) {
+      throw new Error(`Failed to delete newspaper: ${error.message}`);
+    }
   }
 
   // Validate newspaper data before saving

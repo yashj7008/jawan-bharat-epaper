@@ -1,5 +1,6 @@
-import { AdminDashboard } from '@/components/AdminDashboard';
+import { Navigate } from 'react-router-dom';
 
+/** @deprecated Use /admin routes via AdminLayout */
 export function Admin() {
-  return <AdminDashboard />;
+  return <Navigate to="/admin" replace />;
 }
