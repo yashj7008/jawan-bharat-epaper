@@ -2,29 +2,30 @@
 import { supabase } from './supabase';
 
 export interface CroppedImageRecord {
-  id?: number;
+  id?: number | string;
   created_at?: string;
-  cloudinaryUrl: string;
-  cloudinaryKey?: string;
-  pageInfo?: string;
-  pageNumber?: number;
-  newsPaperDate?: string;
+  cloudinary_url: string;
+  cloudinary_key?: string;
+  page_info?: string;
+  page_number?: number;
+  news_paper_date?: string;
 }
 
 export interface CroppedImageInsert {
-  cloudinaryUrl: string;
-  cloudinaryKey?: string;
-  pageInfo?: string;
-  pageNumber?: number;
-  newsPaperDate?: string;
+  cloudinary_url: string;
+  cloudinary_key?: string;
+  page_info: string;
+  page_number?: number;
+  news_paper_date?: string;
 }
 
 class SupabaseCroppedImageService {
-  private tableName = 'crop_images'; // Adjust table name as needed
+  private tableName = 'newspaper_clips'; // Adjust table name as needed
 
   // Save cropped image data to Supabase
   async saveCroppedImage(data: CroppedImageInsert): Promise<{ success: boolean; data?: CroppedImageRecord; error?: string }> {
     try {
+      console.log("data for the cropped image", data);
       const { data: result, error } = await supabase
         .from(this.tableName)
         .insert([data])
@@ -47,12 +48,12 @@ class SupabaseCroppedImageService {
   }
 
   // Get cropped image by ID
-  async getCroppedImageById(id: number): Promise<{ success: boolean; data?: CroppedImageRecord; error?: string }> {
+  async getCroppedImageById(id: string): Promise<{ success: boolean; data?: CroppedImageRecord; error?: string }> {
     try {
       const { data, error } = await supabase
         .from(this.tableName)
         .select('*')
-        .eq('id', id)
+        .eq('cloudinary_key', id)
         .single();
 
       if (error) {

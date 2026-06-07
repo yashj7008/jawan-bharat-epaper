@@ -53,7 +53,7 @@ class CloudinaryCroppedService {
 
   // Generate a unique public ID for the cropped image
   private generatePublicId(id: string): string {
-    return `cropped-images/${id}`;
+    return id;
   }
 
   // Upload cropped image to Cloudinary
@@ -79,7 +79,7 @@ class CloudinaryCroppedService {
       formData.append("file", blob);
       formData.append("upload_preset", this.uploadPreset);
       formData.append("cloud_name", this.cloudName);
-      formData.append("public_id", publicId);
+      formData.append("public_id", id);
 
       // Add context metadata for better searchability
       if (metadata) {
@@ -130,11 +130,11 @@ class CloudinaryCroppedService {
       let supabaseResult = null;
       if (metadata) {
         const supabaseData: CroppedImageInsert = {
-          cloudinaryUrl: result.secure_url,
-          cloudinaryKey: result.public_id,
-          pageInfo: metadata.pageInfo,
-          pageNumber: metadata.pageNumber,
-          newsPaperDate: metadata.date,
+          cloudinary_url: result.secure_url,
+          cloudinary_key: result.public_id,
+          page_info: metadata.pageInfo,
+          page_number: metadata.pageNumber,
+          news_paper_date: metadata.date,
         };
 
         supabaseResult = await supabaseCroppedImageService.saveCroppedImage(

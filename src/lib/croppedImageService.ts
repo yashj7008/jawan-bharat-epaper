@@ -135,14 +135,14 @@ class CroppedImageService {
         return {
           id,
           imageData: "", // Empty since we'll use Cloudinary URL
-          cloudinaryUrl: dbImage.cloudinaryUrl,
-          cloudinaryPublicId: dbImage.cloudinaryKey,
-          pageInfo: dbImage.pageInfo || "",
+          cloudinaryUrl: dbImage.cloudinary_url,
+          cloudinaryPublicId: dbImage.cloudinary_key,
+          pageInfo: dbImage.page_info || "",
           createdAt: dbImage.created_at
             ? new Date(dbImage.created_at)
             : new Date(),
-          pageNumber: dbImage.pageNumber || undefined,
-          date: dbImage.newsPaperDate || undefined,
+          pageNumber: dbImage.page_number || undefined,
+          date: dbImage.news_paper_date || undefined,
         };
       }
     } catch (error) {

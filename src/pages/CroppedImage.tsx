@@ -14,6 +14,7 @@ import {
 import { croppedImageService } from "@/lib/croppedImageService";
 import { toast } from "@/components/ui/use-toast";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import { supabaseCroppedImageService } from "@/lib/supabaseCroppedImageService";
 
 export function CroppedImage() {
   const { id } = useParams<{ id: string }>();
@@ -33,13 +34,14 @@ export function CroppedImage() {
 
       try {
         console.log("id", id);
-        const croppedImage = await croppedImageService.getCroppedImage(id);
+        //const croppedImage = await croppedImageService.getCroppedImage(id);
+        const croppedImage = await supabaseCroppedImageService.getCroppedImageById(id);
 
         if (croppedImage) {
           // Prioritize Cloudinary URL if available, otherwise use local image data
-          const imageUrl = croppedImage.cloudinaryUrl || croppedImage.imageData;
+          const imageUrl = croppedImage.data?.cloudinary_url;
           setImageData(imageUrl);
-          setPageInfo(croppedImage.pageInfo || "");
+          setPageInfo(croppedImage.data?.page_info || "");
           setLoading(false);
         } else {
           setError("Image not found or has expired");
