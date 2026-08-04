@@ -62,7 +62,6 @@ class CroppedImageService {
         if (uploadResult.success && uploadResult.url) {
           croppedImage.cloudinaryUrl = uploadResult.url;
           croppedImage.cloudinaryPublicId = uploadResult.publicId;
-          console.log("Image uploaded to Cloudinary:", uploadResult.url);
         } else {
           console.warn(
             "Cloudinary upload failed, using localStorage fallback:",
@@ -127,8 +126,6 @@ class CroppedImageService {
           publicId
         );
 
-      console.log("supabaseResult", supabaseResult);
-
       if (supabaseResult.success && supabaseResult.data) {
         const dbImage = supabaseResult.data;
         // Create a virtual image data object from Supabase data
@@ -187,7 +184,6 @@ class CroppedImageService {
         if (image.cloudinaryUrl && cloudinaryCroppedService.isConfigured()) {
           try {
             await cloudinaryCroppedService.deleteCroppedImage(id);
-            console.log("Deleted old image from Cloudinary:", id);
           } catch (error) {
             console.warn("Failed to delete image from Cloudinary:", id, error);
           }
@@ -196,10 +192,6 @@ class CroppedImageService {
     }
 
     this.saveToStorage();
-
-    if (imagesToDelete.length > 0) {
-      console.log(`Cleaned up ${imagesToDelete.length} old cropped images`);
-    }
   }
 
   // Legacy synchronous cleanup method

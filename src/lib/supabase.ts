@@ -27,12 +27,10 @@ export const auth = {
 
   // Sign in with email and password
   signIn: async (email: string, password: string) => {
-    console.log("email", email, "password", password);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    console.log("data", data, "error", error);
     return { data, error };
   },
 

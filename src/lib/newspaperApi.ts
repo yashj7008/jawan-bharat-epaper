@@ -115,7 +115,7 @@ export const getNewspaper = async (dateString: string): Promise<NewspaperData> =
       };
     }
   } catch (error) {
-    console.log('Cloudinary fetch failed, using dummy data:', error);
+    console.error('Cloudinary fetch failed, using dummy data:', error);
   }
   
   // Fallback to dummy data if Cloudinary fetch fails
@@ -136,7 +136,7 @@ export const getNewspaperPage = async (dateString: string, pageNumber: number): 
       return convertCloudinaryToNewspaperPage(img, pageNumber);
     }
   } catch (error) {
-    console.log('Cloudinary fetch failed for specific page:', error);
+    console.error('Cloudinary fetch failed for specific page:', error);
   }
   
   // Fallback to dummy data
@@ -157,7 +157,7 @@ export const getAllPagesForDate = async (dateString: string): Promise<NewspaperP
       }).sort((a, b) => a.pageNumber - b.pageNumber);
     }
   } catch (error) {
-    console.log('Cloudinary fetch failed for all pages:', error);
+    console.error('Cloudinary fetch failed for all pages:', error);
   }
   
   // Fallback to dummy data

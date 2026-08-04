@@ -58,16 +58,12 @@ export class NewspaperService {
 
   // Create a new newspaper record
   async createNewspaper(date: string, pages: NewspaperData): Promise<NewspaperRecord> {
-    try {
-      console.log('Creating newspaper:', date, pages);
-      
+    try {      
       if (!supabaseUrl || !supabaseAnonKey) {
         throw new Error('Supabase configuration is missing');
       }
       
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('supabase', supabase);    
-
       const { data, error } = await supabase
         .from('newspaper')
         .insert([{ date_of_paper: date, pages: pages }])
@@ -82,7 +78,6 @@ export class NewspaperService {
       }
 
       const result = data[0];
-      console.log('✅ Newspaper created successfully:', result);
       return result;
     } catch (error) {
       console.error('❌ Error creating newspaper:', error);
@@ -292,7 +287,6 @@ export class NewspaperService {
 
   // Validate newspaper data before saving
   validateNewspaperData(data: NewspaperData): { isValid: boolean; errors: string[] } {
-    console.log('Validating newspaper data:', data);
     const errors: string[] = [];
 
     if (!data.totalPages || data.totalPages <= 0) {

@@ -80,8 +80,6 @@ function getMockData(date: string, page?: number): SearchResult {
  */
 export async function searchNewspaperImages(date: string, page?: number): Promise<SearchResult> {
   try {
-    console.log(`Searching for images with date: ${date}${page ? `, page: ${page}` : ''}`);
-
     // If no valid credentials, return mock data
     if (!hasValidCredentials) {
       console.warn('⚠️ No valid Cloudinary credentials found. Using mock data for testing.');
@@ -94,8 +92,6 @@ export async function searchNewspaperImages(date: string, page?: number): Promis
     if (page) {
       expression += ` AND context.page="${page}"`;
     }
-
-    console.log('Search expression:', expression);
 
     // Use Cloudinary's public search API (limited functionality but works without Admin API)
     const searchUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/search`;
@@ -113,8 +109,6 @@ export async function searchNewspaperImages(date: string, page?: number): Promis
     }
 
     const result = await response.json();
-    console.log('Search result:', result);
-
     return {
       resources: result.resources || [],
       total_count: result.total_count || 0,
@@ -135,8 +129,6 @@ export async function searchNewspaperImages(date: string, page?: number): Promis
  */
 export async function getAllImagesForDate(date: string): Promise<CloudinaryImage[]> {
   try {
-    console.log(`Getting all images for date: ${date}`);
-
     // If no valid credentials, return mock data
     if (!hasValidCredentials) {
       console.warn('⚠️ No valid Cloudinary credentials found. Using mock data for testing.');
@@ -161,7 +153,6 @@ export async function getAllImagesForDate(date: string): Promise<CloudinaryImage
     }
 
     const result = await response.json();
-    console.log(`Found ${result.total_count} images for date ${date}`);
 
     return result.resources || [];
 
@@ -180,8 +171,6 @@ export async function getAllImagesForDate(date: string): Promise<CloudinaryImage
  */
 export async function searchImagesByTags(tags: string[]): Promise<CloudinaryImage[]> {
   try {
-    console.log(`Searching for images with tags:`, tags);
-
     // If no valid credentials, return mock data
     if (!hasValidCredentials) {
       console.warn('⚠️ No valid Cloudinary credentials found. Using mock data for testing.');
@@ -211,7 +200,6 @@ export async function searchImagesByTags(tags: string[]): Promise<CloudinaryImag
     }
 
     const result = await response.json();
-    console.log(`Found ${result.total_count} images with tags:`, tags);
 
     return result.resources || [];
 
@@ -240,8 +228,6 @@ export async function advancedSearch(criteria: {
   maxWidth?: number;
 }): Promise<SearchResult> {
   try {
-    console.log('Advanced search criteria:', criteria);
-
     // If no valid credentials, return mock data
     if (!hasValidCredentials) {
       console.warn('⚠️ No valid Cloudinary credentials found. Using mock data for testing.');
@@ -291,8 +277,6 @@ export async function advancedSearch(criteria: {
       expression = 'resource_type:image';
     }
 
-    console.log('Advanced search expression:', expression);
-
     const searchUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/search`;
     const params = new URLSearchParams({
       expression: expression,
@@ -308,7 +292,6 @@ export async function advancedSearch(criteria: {
     }
 
     const result = await response.json();
-    console.log('Advanced search result:', result);
 
     return {
       resources: result.resources || [],
@@ -328,25 +311,15 @@ export async function advancedSearch(criteria: {
  */
 export async function testCloudinarySearch() {
   try {
-    console.log('🧪 Testing Cloudinary Search API...');
-
     // Test 1: Search by date
-    console.log('\n📅 Test 1: Search by date');
     const dateResult = await searchNewspaperImages('2024-01-15');
-    console.log(`Found ${dateResult.total_count} images for date 2024-01-15`);
 
     // Test 2: Search by date and page
-    console.log('\n📄 Test 2: Search by date and page');
     const pageResult = await searchNewspaperImages('2024-01-15', 1);
-    console.log(`Found ${pageResult.total_count} images for date 2024-01-15, page 1`);
 
     // Test 3: Search by tags
-    console.log('\n🏷️ Test 3: Search by tags');
     const tagResult = await searchImagesByTags(['newspaper', 'front-page']);
-    console.log(`Found ${tagResult.length} images with newspaper and front-page tags`);
-
     // Test 4: Advanced search
-    console.log('\n🔍 Test 4: Advanced search');
     const advancedResult = await advancedSearch({
       date: '2024-01-15',
       section: 'front-page',
@@ -354,9 +327,6 @@ export async function testCloudinarySearch() {
       minWidth: 800,
       maxWidth: 2000,
     });
-    console.log(`Advanced search found ${advancedResult.total_count} images`);
-
-    console.log('\n✅ All tests completed successfully!');
 
   } catch (error) {
     console.error('❌ Test failed:', error);

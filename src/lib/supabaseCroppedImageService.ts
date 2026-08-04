@@ -25,7 +25,6 @@ class SupabaseCroppedImageService {
   // Save cropped image data to Supabase
   async saveCroppedImage(data: CroppedImageInsert): Promise<{ success: boolean; data?: CroppedImageRecord; error?: string }> {
     try {
-      console.log("data for the cropped image", data);
       const { data: result, error } = await supabase
         .from(this.tableName)
         .insert([data])
@@ -74,7 +73,6 @@ class SupabaseCroppedImageService {
   // Get cropped image by Cloudinary key (public_id)
   async getCroppedImageByCloudinaryKey(cloudinaryKey: string): Promise<{ success: boolean; data?: CroppedImageRecord; error?: string }> {
     try {
-        console.log("cloudinaryKey", cloudinaryKey);
       const { data, error } = await supabase
         .from(this.tableName)
         .select('*')
