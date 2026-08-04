@@ -14,7 +14,7 @@ import {
 import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
-import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Helper function to format dates consistently in Indian timezone
