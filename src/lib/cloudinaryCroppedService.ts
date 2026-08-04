@@ -124,8 +124,6 @@ class CloudinaryCroppedService {
 
       const result = await response.json();
 
-      console.log("result", result);
-
       // Save to Supabase database after successful Cloudinary upload
       let supabaseResult = null;
       if (metadata) {
@@ -141,18 +139,11 @@ class CloudinaryCroppedService {
           supabaseData
         );
 
-        console.log("supabaseResult", supabaseResult);
-
         if (!supabaseResult.success) {
           console.warn("Failed to save to Supabase:", supabaseResult.error);
           // Continue with success since Cloudinary upload worked
           // You might want to implement retry logic here
-        } else {
-          console.log(
-            "Successfully saved cropped image to Supabase:",
-            supabaseResult.data
-          );
-        }
+        } 
       }
 
       return {
@@ -227,7 +218,6 @@ class CloudinaryCroppedService {
     try {
       // Note: Deleting from Cloudinary requires Admin API credentials
       // For now, we'll just mark it as deleted or rely on Cloudinary's auto-cleanup
-      console.log(`Marked cropped image ${id} for deletion`);
       return true;
     } catch (error) {
       console.error("Error deleting cropped image:", error);

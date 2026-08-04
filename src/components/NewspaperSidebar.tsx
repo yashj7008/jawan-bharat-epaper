@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Newspaper, TrendingUp, X } from "lucide-react";
 import { type NewspaperPage } from "@/lib/dummyApi";
-import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 
 interface SidebarProps {
   selectedSection: string;

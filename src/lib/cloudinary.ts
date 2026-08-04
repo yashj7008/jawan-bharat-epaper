@@ -92,8 +92,6 @@ export const fetchNewspaperPages = async (date: Date, pageNumber?: number): Prom
         return parseInt(imagePage) === pageNumber;
       });
     }
-    
-    console.log(`Found ${filteredImages.length} images for ${formattedDate}${pageNumber ? ` - Page ${pageNumber}` : ''}`);
     return filteredImages;
     
   } catch (error) {
@@ -127,9 +125,7 @@ export const storeUploadedImage = (cloudinaryUrl: string, date: Date, pageNumber
     
     // Store back to localStorage
     localStorage.setItem('cloudinary_images', JSON.stringify(images));
-    
-    console.log('Image stored locally:', imageData);
-    
+        
   } catch (error) {
     console.error('Error storing image locally:', error);
   }

@@ -1,5 +1,5 @@
 // Utility for composing cropped images with logo and page information
-import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 
 export interface CompositeImageOptions {
   pageNumber: number;
