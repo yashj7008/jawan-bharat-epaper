@@ -18,7 +18,6 @@ export function CloudinaryTest() {
     try {
       const result = await searchNewspaperImages(date);
       setResults(result);
-      console.log('Search result:', result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');
       console.error('Search error:', err);
@@ -33,7 +32,6 @@ export function CloudinaryTest() {
     try {
       const images = await getAllImagesForDate(date);
       setResults({ resources: images, total_count: images.length });
-      console.log('All images:', images);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to get images');
       console.error('Get images error:', err);
@@ -48,7 +46,6 @@ export function CloudinaryTest() {
     try {
       const result = await searchNewspaperImages(date, parseInt(page));
       setResults(result);
-      console.log('Page search result:', result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Page search failed');
       console.error('Page search error:', err);
@@ -68,7 +65,6 @@ export function CloudinaryTest() {
         minWidth: 800,
       });
       setResults(result);
-      console.log('Advanced search result:', result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Advanced search failed');
       console.error('Advanced search error:', err);
@@ -83,7 +79,6 @@ export function CloudinaryTest() {
     try {
       const images = await searchImagesByTags(['newspaper', 'front-page']);
       setResults({ resources: images, total_count: images.length });
-      console.log('Tag search result:', images);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Tag search failed');
       console.error('Tag search error:', err);

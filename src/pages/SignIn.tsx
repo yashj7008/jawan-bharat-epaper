@@ -42,11 +42,8 @@ export function SignIn() {
 
     setIsLoading(true);
     
-    try {
-      console.log( "email",email, "password", password);
-      
+    try {      
       const { data, error } = await auth.signIn(email, password);
-      
       if (error) {
         throw error;
       }
@@ -58,7 +55,7 @@ export function SignIn() {
         });
         
         // Redirect to home page after successful sign in
-        navigate("/");
+        navigate("/admin");
       }
       
     } catch (error: any) {

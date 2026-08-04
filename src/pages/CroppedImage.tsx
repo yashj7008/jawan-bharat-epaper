@@ -4,16 +4,14 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Download,
-  Share2,
   Home,
   Facebook,
   Twitter,
   MessageCircle,
   Copy,
 } from "lucide-react";
-import { croppedImageService } from "@/lib/croppedImageService";
 import { toast } from "@/components/ui/use-toast";
-import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 import { supabaseCroppedImageService } from "@/lib/supabaseCroppedImageService";
 
 export function CroppedImage() {
@@ -33,8 +31,6 @@ export function CroppedImage() {
       }
 
       try {
-        console.log("id", id);
-        //const croppedImage = await croppedImageService.getCroppedImage(id);
         const croppedImage = await supabaseCroppedImageService.getCroppedImageById(id);
 
         if (croppedImage) {

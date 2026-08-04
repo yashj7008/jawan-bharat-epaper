@@ -123,7 +123,6 @@ export function Header({
 
   const handleDownloadPDF = () => {
     // Implement PDF download functionality
-    console.log("Downloading PDF...");
   };
 
   const handleDownload = async (format: "image" | "pdf") => {

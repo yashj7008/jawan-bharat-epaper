@@ -146,8 +146,6 @@ export function AdminDashboard() {
         title: "Newspaper Created Successfully",
         description: `Newspaper record created for ${format(selectedDate, "MMM dd, yyyy")} with ${newspaperData.totalPages} pages`,
       });
-
-      console.log('Newspaper created:', result);
       
     } catch (error) {
       console.error('Failed to create newspaper:', error);
@@ -563,7 +561,6 @@ export function AdminDashboard() {
                         fileSize: img.file.size
                       }))
                     };
-                    console.log('📰 Newspaper Data for API:', newspaperData);
                     toast({
                       title: "Data Logged to Console",
                       description: "Check browser console for newspaper data structure",

@@ -14,7 +14,7 @@ import {
 import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
-import jawanBharatLogo from "@/assets/jawan-bharat-logo.jpg";
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Helper function to format dates consistently in Indian timezone
@@ -103,7 +103,6 @@ export function NewspaperApp() {
 
     if (pageParam) {
       const parsedPage = parseInt(pageParam);
-      console.log("Parsed page:", parsedPage);
       if (!isNaN(parsedPage) && parsedPage > 0) {
         setCurrentPage(parsedPage);
       }
@@ -127,7 +126,6 @@ export function NewspaperApp() {
       setError(null);
       try {
         const dateString = formatDateForAPI(selectedDate);
-        console.log("📅 Fetching newspaper for date:", dateString);
 
         // Call Supabase API to get newspaper data
         const newspaperRecord = await newspaperService.getNewspaperByDate(
@@ -141,7 +139,6 @@ export function NewspaperApp() {
           setTotalPages(data.totalPages);
         } else {
           // No data found for this date, fallback to dummy data
-          console.log("⚠️ No data found for date, using fallback");
           const data = await getNewspaper(dateString);
           setNewspaperData(data);
           setTotalPages(data.totalPages);
@@ -179,8 +176,6 @@ export function NewspaperApp() {
     setLoading(true);
     try {
       const dateString = formatDateForAPI(selectedDate);
-      console.log("🔄 Refreshing pages for date:", dateString);
-
       // Call Supabase API to get fresh newspaper data
       const newspaperRecord = await newspaperService.getNewspaperByDate(
         dateString
@@ -246,7 +241,7 @@ export function NewspaperApp() {
     if (pageData) {
       setSelectedSection(pageData.section);
     } else {
-      console.log("⚠️ Page data not found for page:", page);
+      console.error("⚠️ Page data not found for page:", page);
     }
   };
 
