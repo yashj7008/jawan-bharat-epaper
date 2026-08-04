@@ -58,7 +58,7 @@ export function SignIn() {
         });
         
         // Redirect to home page after successful sign in
-        navigate("/");
+        navigate("/admin");
       }
       
     } catch (error: any) {
