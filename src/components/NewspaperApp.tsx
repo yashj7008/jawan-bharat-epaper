@@ -336,6 +336,7 @@ export function NewspaperApp() {
             isRefreshing={loading}
             currentPageData={currentPageData}
           />
+          <div aria-hidden="true" className="h-10 shrink-0 md:hidden" />
 
           <div className="flex-1 flex">
             <NewspaperViewer
