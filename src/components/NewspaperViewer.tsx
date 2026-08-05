@@ -10,6 +10,59 @@ import {
   createSimpleComposite,
 } from "@/lib/imageComposer";
 
+/** Render crop at the image's natural (full) resolution, not display size. */
+function createHighResCropCanvas(
+  image: HTMLImageElement,
+  crop: PixelCrop
+): HTMLCanvasElement {
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+
+  const outputWidth = Math.max(1, Math.round(crop.width * scaleX));
+  const outputHeight = Math.max(1, Math.round(crop.height * scaleY));
+  const sourceX = crop.x * scaleX;
+  const sourceY = crop.y * scaleY;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Could not get canvas context");
+  }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    outputWidth,
+    outputHeight,
+    0,
+    0,
+    outputWidth,
+    outputHeight
+  );
+
+  return canvas;
+}
+
+/** Default crop box in displayed-image pixels (react-image-crop uses display coords). */
+function getDefaultCrop(displayWidth: number, displayHeight: number): CropType {
+  const cropWidth = Math.min(300, Math.round(displayWidth * 0.5));
+  const cropHeight = Math.min(300, Math.round(displayHeight * 0.25));
+
+  return {
+    unit: "px",
+    width: cropWidth,
+    height: cropHeight,
+    x: Math.round((displayWidth - cropWidth) / 2),
+    y: 0,
+  };
+}
+
 interface NewspaperViewerProps {
   currentPage: number;
   zoom: number;
@@ -62,30 +115,9 @@ export function NewspaperViewer({
   // Set initial crop when entering crop mode
   useEffect(() => {
     if (isCropMode && imageLoaded && imgRef.current && !crop) {
-      const imgWidth = imgRef.current.naturalWidth;
-      const imgHeight = imgRef.current.naturalHeight;
-      const displayWidth = imgRef.current.width;
-      const displayHeight = imgRef.current.height;
-
-      // Calculate initial crop size (20% of image dimensions, max 300x300px)
-      const cropWidth = Math.min(300, Math.round(imgWidth * 0.2));
-      const cropHeight = Math.min(300, Math.round(imgHeight * 0.2));
-
-      // Calculate scale factors between natural and displayed dimensions
-      const scaleX = imgWidth / displayWidth;
-      const scaleY = imgHeight / displayHeight;
-
-      // Position crop at the top center of the displayed image
-      const cropX = Math.round((displayWidth - cropWidth / scaleX) / 2);
-      const cropY = 0; // Position at the top
-
-      setCrop({
-        unit: "px",
-        width: cropWidth,
-        height: cropHeight,
-        x: cropX,
-        y: cropY,
-      });
+      setCrop(
+        getDefaultCrop(imgRef.current.width, imgRef.current.height)
+      );
     }
   }, [isCropMode, imageLoaded, crop]);
 
@@ -133,61 +165,14 @@ export function NewspaperViewer({
     // End transition when image is loaded
     setTimeout(() => setIsTransitioning(false), 100);
 
-    // Set a smaller default crop size when image loads
-    const imgWidth = img.naturalWidth;
-    const imgHeight = img.naturalHeight;
-    const displayWidth = img.width;
-    const displayHeight = img.height;
-
-    // Calculate a smaller crop size (e.g., 20% of image dimensions)
-    const cropWidth = Math.min(300, Math.round(imgWidth * 0.2));
-    const cropHeight = Math.min(300, Math.round(imgHeight * 0.2));
-
-    // Calculate scale factors between natural and displayed dimensions
-    const scaleX = imgWidth / displayWidth;
-    const scaleY = imgHeight / displayHeight;
-
-    // Center the crop area in the displayed image viewport
-    const cropX = Math.round((displayWidth - cropWidth / scaleX) / 2);
-    const cropY = 0; // Position at the top
-
-    setCrop({
-      unit: "px",
-      width: cropWidth,
-      height: cropHeight,
-      x: cropX,
-      y: cropY,
-    });
+    setCrop(getDefaultCrop(img.width, img.height));
   };
 
   const handleCrop = async () => {
     if (!imgRef.current || !completedCrop || !onCropComplete) return;
 
     try {
-      // First, create the cropped image
-      const cropCanvas = document.createElement("canvas");
-      const cropCtx = cropCanvas.getContext("2d");
-
-      if (!cropCtx) return;
-
-      const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
-      const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
-
-      cropCanvas.width = completedCrop.width;
-      cropCanvas.height = completedCrop.height;
-
-      // Draw the cropped portion
-      cropCtx.drawImage(
-        imgRef.current,
-        completedCrop.x * scaleX,
-        completedCrop.y * scaleY,
-        completedCrop.width * scaleX,
-        completedCrop.height * scaleY,
-        0,
-        0,
-        completedCrop.width,
-        completedCrop.height
-      );
+      const cropCanvas = createHighResCropCanvas(imgRef.current, completedCrop);
 
       // Now create the composite image with logo and page info
       const currentPageData = newspaperData?.pages.find(
@@ -209,28 +194,7 @@ export function NewspaperViewer({
       console.error("Error cropping image:", error);
       // Fallback to simple crop with page info but without logo
       try {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        if (!ctx) return;
-
-        const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
-        const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
-
-        canvas.width = completedCrop.width;
-        canvas.height = completedCrop.height;
-
-        ctx.drawImage(
-          imgRef.current,
-          completedCrop.x * scaleX,
-          completedCrop.y * scaleY,
-          completedCrop.width * scaleX,
-          completedCrop.height * scaleY,
-          0,
-          0,
-          completedCrop.width,
-          completedCrop.height
-        );
+        const canvas = createHighResCropCanvas(imgRef.current, completedCrop);
 
         // Create simple composite with page info
         const currentPageData = newspaperData?.pages.find(
@@ -267,30 +231,7 @@ export function NewspaperViewer({
 
       // Set initial crop selection when entering crop mode
       if (imgRef.current) {
-        const imgWidth = imgRef.current.naturalWidth;
-        const imgHeight = imgRef.current.naturalHeight;
-        const displayWidth = imgRef.current.width;
-        const displayHeight = imgRef.current.height;
-
-        // Calculate initial crop size (20% of image dimensions, max 300x300px)
-        const cropWidth = Math.min(300, Math.round(imgWidth * 0.2));
-        const cropHeight = Math.min(300, Math.round(imgHeight * 0.2));
-
-        // Calculate scale factors between natural and displayed dimensions
-        const scaleX = imgWidth / displayWidth;
-        const scaleY = imgHeight / displayHeight;
-
-        // Center the crop area in the displayed image viewport
-        const cropX = Math.round((displayWidth - cropWidth / scaleX) / 2);
-        const cropY = 0; // Position at the top
-
-        setCrop({
-          unit: "px",
-          width: cropWidth,
-          height: cropHeight,
-          x: cropX,
-          y: cropY,
-        });
+        setCrop(getDefaultCrop(imgRef.current.width, imgRef.current.height));
       }
     }
   };

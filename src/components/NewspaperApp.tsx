@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+//import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Header } from "./Header";
-import { NewspaperSidebar } from "./NewspaperSidebar";
+//import { NewspaperSidebar } from "./NewspaperSidebar";
 import { NewspaperViewer } from "./NewspaperViewer";
 import { PageListDialog } from "./PageListDialog";
 import {
   getNewspaper,
-  getNewspaperPage,
   getAllPagesForDate,
   type NewspaperData,
   type NewspaperPage,
@@ -15,7 +14,11 @@ import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, ZoomIn } from "lucide-react";
+
+const MIN_ZOOM = 50;
+const MAX_ZOOM = 200;
+const ZOOM_STEP = 10;
 
 // Helper function to format dates consistently in Indian timezone
 const formatDateForAPI = (date: Date): string => {
@@ -259,6 +262,12 @@ export function NewspaperApp() {
     setCurrentPage(1);
   };
 
+  const adjustZoom = (amount: number) => {
+    setZoom((currentZoom) =>
+      Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, currentZoom + amount))
+    );
+  };
+
   const handleCropComplete = (croppedImage: string) => {
     setCroppedImageData(croppedImage);
     setIsShareCroppedOpen(true);
@@ -336,6 +345,7 @@ export function NewspaperApp() {
             isRefreshing={loading}
             currentPageData={currentPageData}
           />
+          <div aria-hidden="true" className="h-10 shrink-0 md:hidden" />
 
           <div className="flex-1 flex">
             <NewspaperViewer
@@ -355,6 +365,32 @@ export function NewspaperApp() {
         </div>
       </div>
       <div className="fixed  bg-green-400 text-4xl">ome</div>
+      <div className="fixed bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center overflow-hidden rounded-full border bg-background shadow-lg md:hidden">
+        <button
+          type="button"
+          onClick={() => adjustZoom(-ZOOM_STEP)}
+          disabled={zoom <= MIN_ZOOM}
+          className="flex h-11 w-11 items-center justify-center border-r text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Zoom out"
+        >
+          <Minus className="h-5 w-5" />
+        </button>
+        <div
+          className="flex h-11 w-11 items-center justify-center text-muted-foreground"
+          aria-label={`Zoom level: ${zoom}%`}
+        >
+          <ZoomIn className="h-5 w-5" />
+        </div>
+        <button
+          type="button"
+          onClick={() => adjustZoom(ZOOM_STEP)}
+          disabled={zoom >= MAX_ZOOM}
+          className="flex h-11 w-11 items-center justify-center border-l text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Zoom in"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+      </div>
       {/* Left Navigation Bar - Positioned within container bounds */}
       {currentPage > 1 && (
         <div
