@@ -277,55 +277,10 @@ export function Header({
   };
 
   return (
-    <header className="bg-paper paper-shadow sticky top-0 z-40  border-t border-red-500">
+    <header className="fixed inset-x-0 bottom-0 z-40 border-t border-red-500 bg-paper paper-shadow md:sticky md:top-0 md:bottom-auto">
       <div className="flex items-center justify-center md:justify-between  px-4 border border-gray-100">
         {/* Left section: Home and Date */}
         <div className="hidden md:flex items-center space-x-4">
-          {/* <SidebarTrigger className="mr-2" /> */}
-          {/* <Button
-            variant="outline"
-            size="sm"
-            className=""
-            onClick={() => navigate("/")}
-          >
-            <Home className="h-4 w-4 mr-2" />
-            Home
-          </Button> */}
-
-          {/* <Button
-            variant="outline"
-            size="sm"
-            className="text-foreground hover:bg-secondary"
-            onClick={() => (window.location.href = "/admin")}
-          >
-            Admin
-          </Button> */}
-
-          {/* {user ? (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">
-                {user.email}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-foreground hover:bg-secondary"
-                onClick={signOut}
-              >
-                Sign Out
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-foreground hover:bg-secondary"
-              onClick={() => (window.location.href = "/signin")}
-            >
-              Sign In
-            </Button>
-          )} */}
-
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -406,7 +361,7 @@ export function Header({
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            <div className="flex flex-col items-center space-y-1">
+            <div className="hidden md:block flex flex-col items-center space-y-1">
               <div className="flex items-center space-x-2 md:ml-4">
                 <span className="hidden md:block text-sm text-muted-foreground">
                   Page
@@ -449,6 +404,64 @@ export function Header({
           >
             <Crop className="h-4 w-4" />
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDownload("image")}
+            className="group md:hidden"
+          >
+            <Download className="h-4 w-4 mr-2 text-blue-600 group-hover:text-white transition-colors" />
+          </Button>
+          {/* Share Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="md:hidden">
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-48 [&_.dropdown-item:hover]:text-white [&_.dropdown-item:hover_svg]:text-white"
+            >
+              <DropdownMenuItem
+                onClick={() => handleShare("facebook")}
+                className="dropdown-item"
+              >
+                <Facebook className="h-4 w-4 mr-2 text-blue-600" />
+                Share on Facebook
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleShare("twitter")}
+                className="dropdown-item"
+              >
+                <Twitter className="h-4 w-4 mr-2 text-blue-400" />
+                Share on Twitter
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleShare("whatsapp")}
+                className="dropdown-item"
+              >
+                <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                Share on WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleShare("copy")}
+                className="dropdown-item"
+              >
+                {isLinkCopied ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2 text-green-600" />
+                    Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Link className="h-4 w-4 mr-2" />
+                    Copy Link
+                  </>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Right section: Tools and controls */}
