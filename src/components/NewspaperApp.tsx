@@ -315,7 +315,7 @@ export function NewspaperApp() {
                   )}
                 >
                   <CalendarIcon className="h-5 w-5 shrink-0 sm:mr-2" />
-                  <span className="hidden min-[390px]:inline">
+                  <span>
                     {format(selectedDate, "MMM dd, yyyy")}
                   </span>
                 </Button>
