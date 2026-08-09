@@ -6,6 +6,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const playSound = () => {
-  const audio = new Audio("src/media/flip.mp3");
+  const audio = new Audio("https://res.cloudinary.com/djm9pwfzu/video/upload/v1786283504/flip_cwxe4x.mp3");
   audio.play();
 };

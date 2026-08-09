@@ -294,7 +294,7 @@ export function NewspaperApp() {
       <div className="flex min-h-screen w-full">
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-start pl-4 md:pl-0 md:justify-center my-4 border-b border-red-100 md:border-none pb-4 md:pb-0 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.3)] md:shadow-none">
+          <div className="sticky top-0 z-40 flex items-center justify-start bg-background px-4 py-3 md:my-4 border-b border-red-100  shadow-[0_4px_6px_-4px_rgba(0,0,0,0.3)] md:static md:justify-center md:border-none md:p-0 md:shadow-none">
             <img
               src={jawanBharatLogo}
               alt="logo"
