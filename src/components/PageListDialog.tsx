@@ -35,16 +35,16 @@ export function PageListDialog({
       <DialogContent className="max-w-6xl w-[95vw]">
         <DialogHeader>
           <DialogTitle className="headline">
-            {newspaperData.title} - {newspaperData.edition}
+            {newspaperData?.title} - {newspaperData?.edition}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            {newspaperData.date} • {totalPages} Pages
+            {newspaperData?.date} • {totalPages} Pages
           </p>
         </DialogHeader>
 
         <ScrollArea className="h-[70vh]">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
-            {newspaperData.pages.map((page) => (
+            {newspaperData?.pages.map((page) => (
               <div
                 key={page.pageNumber}
                 className="relative group cursor-pointer"
