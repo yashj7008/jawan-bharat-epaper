@@ -267,7 +267,7 @@ export function Header({
   };
 
   return (
-    <header className="fixed inset-x-0 bottom-2 z-40 mx-auto w-[calc(100%-1rem)] max-w-xl rounded-2xl border border-border/80 bg-background/95 shadow-lg shadow-black/5 backdrop-blur-md md:sticky md:top-0 md:bottom-auto md:w-full md:max-w-none md:rounded-none md:border-x-0 md:border-t-0 md:border-b md:bg-background/90 md:shadow-sm">
+    <header className="fixed inset-x-0 bottom-2 z-40 mx-auto w-[calc(100%-1rem)] max-w-xl rounded-2xl border border-border/80 bg-background/95 shadow-lg shadow-black/5 backdrop-blur-md md:sticky md:top-0 md:bottom-auto md:w-full md:max-w-none md:rounded-none md:border-x-0  md:border-b md:bg-background/90 md:shadow-sm md:border-t-red-500">
       <div className="flex min-w-0 items-center justify-between gap-2 px-2 py-2 sm:px-3 md:min-h-16 md:px-6 md:py-3">
         {/* Left section: Home and Date */}
         <div className="hidden shrink-0 md:flex md:items-center">

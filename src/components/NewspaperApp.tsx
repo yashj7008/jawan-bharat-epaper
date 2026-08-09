@@ -19,9 +19,9 @@ import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
-import { CalendarIcon, ChevronLeft, ChevronRight, Minus, Plus, ZoomIn } from "lucide-react";
+import { CalendarIcon, ChevronsRight,  ChevronsLeft} from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, playSound } from "@/lib/utils";
 
 // Helper function to format dates consistently in Indian timezone
 const formatDateForAPI = (date: Date): string => {
@@ -239,6 +239,7 @@ export function NewspaperApp() {
 
   // Update section when page changes
   const handlePageChange = async (page: number) => {
+    playSound();
     setCurrentPage(page);
   };
 
@@ -381,10 +382,8 @@ export function NewspaperApp() {
           className="fixed left-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
           onClick={() => handlePageChange(currentPage - 1)}
         >
-          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-r-lg p-2 backdrop-blur-sm">
-            <div className="flex items-center justify-center">
-              <ChevronLeft className="h-6 w-6 text-white drop-shadow-lg" />
-            </div>
+          <div className="bg-black/30 hover:bg-black/40 transition-all duration-200 rounded-r-lg p-2 h-36 flex justify-center items-center">
+              <ChevronsLeft className="h-6 w-6 text-white drop-shadow-lg" />
           </div>
         </div>
       )}
@@ -395,9 +394,9 @@ export function NewspaperApp() {
           className="fixed right-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
           onClick={() => handlePageChange(currentPage + 1)}
         >
-          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-l-lg p-2 backdrop-blur-sm">
+          <div className="bg-black/30 hover:bg-black/40 transition-all duration-200 rounded-l-lg p-2 h-36 flex justify-center items-center">
             <div className="flex items-center justify-center">
-              <ChevronRight className="h-6 w-6 text-white drop-shadow-lg" />
+              <ChevronsRight className="h-6 w-6 text-white drop-shadow-lg" />
             </div>
           </div>
         </div>
