@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Crop, X, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Check } from "lucide-react";
 import ReactCrop, { Crop as CropType, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { type NewspaperData } from "@/lib/dummyApi";
 import {
   createCompositeImage,
@@ -66,7 +66,6 @@ function getDefaultCrop(displayWidth: number, displayHeight: number): CropType {
 interface NewspaperViewerProps {
   currentPage: number;
   zoom: number;
-  selectedSection: string;
   newspaperData: NewspaperData | null;
   onCropComplete: (croppedImageData: string) => void;
   isCropMode: boolean;
@@ -78,7 +77,6 @@ interface NewspaperViewerProps {
 export function NewspaperViewer({
   currentPage,
   zoom,
-  selectedSection,
   newspaperData,
   onCropComplete,
   isCropMode,
@@ -122,8 +120,7 @@ export function NewspaperViewer({
   }, [isCropMode, imageLoaded, crop]);
 
   const zoomStyle = {
-    transform: `scale(${zoom / 100})`,
-    transformOrigin: "top center",
+    width: `${zoom}%`,
   };
 
   // Get current page data
@@ -247,11 +244,11 @@ export function NewspaperViewer({
   }
 
   return (
-    <div className="flex-1 bg-muted relative overflow-hidden">
+    <div className="relative flex-1 overflow-hidden bg-muted">
       <ScrollArea className="h-full w-full" ref={viewerRef}>
-        <div className="md:p-8 flex justify-center">
+        <div className="flex min-w-full justify-center md:p-8">
           <div
-            className="bg-paper paper-shadow relative w-full"
+            className="relative shrink-0 bg-paper paper-shadow"
             style={zoomStyle}
           >
             {/* Page Controls */}
@@ -291,7 +288,7 @@ export function NewspaperViewer({
             {/* Newspaper Page Content */}
             <div className="relative">
               {/* Page Content */}
-              <div className="min-w-4xl">
+              <div className="min-w-full">
                 {/* Page Content */}
                 {/* Loading overlay during transition */}
                 {isTransitioning && (
@@ -349,19 +346,6 @@ export function NewspaperViewer({
                 </div>
               </div>
 
-              {/* Page overlay for section highlighting */}
-              {/* <div className="absolute inset-0 pointer-events-none">
-                {selectedSection !== "front-page" && (
-                  <div className="absolute top-0 left-0 w-full h-12 bg-accent/10 border-l-4 border-accent">
-                    <div className="p-2">
-                      <span className="text-xs font-semibold text-accent uppercase tracking-wider">
-                        {selectedSection.replace("-", " ")} Section
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div> */}
-
               {/* Page number indicator */}
               <div
                 className={`absolute bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
@@ -375,6 +359,7 @@ export function NewspaperViewer({
             </div>
           </div>
         </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
   );

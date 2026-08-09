@@ -1,5 +1,6 @@
 // Utility for composing cropped images with logo and page information
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
+import { format } from "date-fns";
 
 export interface CompositeImageOptions {
   pageNumber: number;
@@ -69,8 +70,9 @@ export const createCompositeImage = async (
         // Draw page info at the bottom
         const pageInfoY = croppedY + croppedCanvas.height + padding;
         
-        const pageText = `Page ${pageNumber} of ${totalPages}`;
-        const dateText = date || new Date().toLocaleDateString('en-IN');
+        const siteURLText = 'epaper.jawanbharat.com';
+        const dateText = format(date ? new Date(date) : new Date(), "dd MMMM yyyy");
+        const pageText = `${dateText} | Page ${pageNumber}`;
 
         // Set font for page info
         compositeCtx.fillStyle = '#333333';
@@ -82,7 +84,7 @@ export const createCompositeImage = async (
         
         // Draw date
         compositeCtx.font = '14px Arial, sans-serif';
-        compositeCtx.fillText(dateText, compositeWidth / 2, pageInfoY + 40);
+        compositeCtx.fillText(siteURLText, compositeWidth / 2, pageInfoY + 40);
 
         // Convert to data URL and resolve
         const compositeImageData = compositeCanvas.toDataURL('image/png');
@@ -120,8 +122,9 @@ export const createCompositeImage = async (
         // Draw page info at the bottom
         const pageInfoY = croppedCanvas.height + padding;
         
-        const pageText = `Page ${pageNumber} of ${totalPages}`;
-        const dateText = date || new Date().toLocaleDateString('en-IN');
+        const siteURLText = 'epaper.jawanbharat.com';
+        const dateText = format(date ? new Date(date) : new Date(), "dd MMMM yyyy");
+        const pageText = `${dateText} | Page ${pageNumber}`;
 
         compositeCtx.fillStyle = '#333333';
         compositeCtx.font = 'bold 16px Arial, sans-serif';
@@ -129,7 +132,7 @@ export const createCompositeImage = async (
         compositeCtx.fillText(pageText, compositeWidth / 2, pageInfoY + 20);
         
         compositeCtx.font = '14px Arial, sans-serif';
-        compositeCtx.fillText(dateText, compositeWidth / 2, pageInfoY + 40);
+        compositeCtx.fillText(siteURLText, compositeWidth / 2, pageInfoY + 40);
 
         const compositeImageData = compositeCanvas.toDataURL('image/png');
         resolve(compositeImageData);
@@ -185,8 +188,9 @@ export const createSimpleComposite = (
   // Draw page info at the bottom
   const pageInfoY = croppedCanvas.height + padding;
   
-  const pageText = `Page ${pageNumber} of ${totalPages}`;
-  const dateText = date || new Date().toLocaleDateString('en-IN');
+  const siteURLText = 'epaper.jawanbharat.com';
+  const dateText = format(date ? new Date(date) : new Date(), "dd MMMM yyyy");
+  const pageText = `${dateText} | Page ${pageNumber}`;
 
   compositeCtx.fillStyle = '#333333';
   compositeCtx.font = 'bold 16px Arial, sans-serif';
@@ -194,7 +198,7 @@ export const createSimpleComposite = (
   compositeCtx.fillText(pageText, compositeWidth / 2, pageInfoY + 20);
   
   compositeCtx.font = '14px Arial, sans-serif';
-  compositeCtx.fillText(dateText, compositeWidth / 2, pageInfoY + 40);
+  compositeCtx.fillText(siteURLText, compositeWidth / 2, pageInfoY + 40);
 
   return compositeCanvas.toDataURL('image/png');
 };

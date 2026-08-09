@@ -7,13 +7,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
@@ -22,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Home,
   Calendar as CalendarIcon,
   Download,
   Crop,
@@ -36,14 +28,11 @@ import {
   MessageCircle,
   Link,
   Check,
-  RefreshCw,
+  ZoomOut,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { SidebarTrigger } from "./ui/sidebar";
 import { toast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router";
 import { getCurrentPageUrl } from "@/lib/commonFunctions";
 
 interface HeaderProps {
@@ -65,6 +54,10 @@ interface HeaderProps {
   };
 }
 
+const MIN_ZOOM = 50;
+const MAX_ZOOM = 200;
+const ZOOM_STEP : number = 10;
+
 export function Header({
   currentPage,
   totalPages,
@@ -80,12 +73,8 @@ export function Header({
   isRefreshing,
   currentPageData,
 }: HeaderProps) {
-  const { user, signOut } = useAuth();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [isMobileDatePickerOpen, setIsMobileDatePickerOpen] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const navigate = useNavigate();
 
   // Update URL query parameters when date or page changes
   useEffect(() => {
@@ -125,9 +114,13 @@ export function Header({
     // Implement PDF download functionality
   };
 
+  const adjustZoom = (amount: number) => {
+    const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom + amount));
+    onZoomChange(newZoom);
+  };
+
   const handleDownload = async (format: "image" | "pdf") => {
     try {
-      setIsDownloading(true);
 
       if (format === "image") {
         if (!currentPageData?.imageUrl) {
@@ -205,7 +198,6 @@ export function Header({
                   description: `Page ${currentPage} downloaded as image (${zoom}% zoom)`,
                 });
               }
-              setIsDownloading(false);
             },
             "image/png",
             1.0
@@ -218,7 +210,6 @@ export function Header({
             description: "Could not load the image",
             variant: "destructive",
           });
-          setIsDownloading(false);
         };
 
         img.src = currentPageData.imageUrl;
@@ -230,7 +221,6 @@ export function Header({
         description: "Failed to download the page",
         variant: "destructive",
       });
-      setIsDownloading(false);
     }
   };
 
@@ -277,17 +267,17 @@ export function Header({
   };
 
   return (
-    <header className="fixed inset-x-0 bottom-0 z-40 border-t border-red-500 bg-paper paper-shadow md:sticky md:top-0 md:bottom-auto">
-      <div className="flex items-center justify-center md:justify-between  px-4 border border-gray-100">
+    <header className="fixed inset-x-0 bottom-2 z-40 mx-auto w-[calc(100%-1rem)] max-w-xl rounded-2xl border border-border/80 bg-background/95 shadow-lg shadow-black/5 backdrop-blur-md md:sticky md:top-0 md:bottom-auto md:w-full md:max-w-none md:rounded-none md:border-x-0  md:border-b md:bg-background/90 md:shadow-sm md:border-t-red-500">
+      <div className="flex min-w-0 items-center justify-between gap-2 px-2 py-2 sm:px-3 md:min-h-16 md:px-6 md:py-3">
         {/* Left section: Home and Date */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden shrink-0 md:flex md:items-center">
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "justify-start text-left font-normal",
+                  "h-10 rounded-lg border-border/70 px-3 text-left font-medium text-foreground shadow-none transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
                   !selectedDate && "text-muted-foreground"
                 )}
               >
@@ -299,6 +289,8 @@ export function Header({
               <Calendar
                 mode="single"
                 selected={selectedDate}
+                disabled={{ after: new Date() }}
+                toMonth={new Date()}
                 onSelect={(date) => {
                   if (date) {
                     onDateChange(date);
@@ -313,52 +305,19 @@ export function Header({
         </div>
 
         {/* Center section: Page navigation */}
-        <div className="flex items-center space-x-3 md:ml-32">
-          <div className="flex items-center space-x-2">
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-1 sm:gap-2 md:justify-center">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {/* <SidebarTrigger className="mr-2 md:hidden" /> */}
-
-            {/* Mobile Date Picker */}
-            <Popover
-              open={isMobileDatePickerOpen}
-              onOpenChange={setIsMobileDatePickerOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "justify-start text-left font-normal md:hidden",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-2" />
-                  {format(selectedDate, "MMM dd, yyyy")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    if (date) {
-                      onDateChange(date);
-                      setIsMobileDatePickerOpen(false);
-                    }
-                  }}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
 
             {/* Page Navigation */}
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </Button>
 
             <div className="hidden md:block flex flex-col items-center space-y-1">
@@ -375,7 +334,7 @@ export function Header({
                       onPageChange(page);
                     }
                   }}
-                  className="w-10 md:w-16 h-8 text-center"
+                  className="h-10 w-16 rounded-lg border-border/70 text-center text-sm font-medium shadow-none focus-visible:ring-2 focus-visible:ring-ring/50"
                   min={1}
                   max={totalPages}
                 />
@@ -386,42 +345,72 @@ export function Header({
             </div>
 
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
 
           {/* Mobile Crop Button */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleCrop}
-            className="md:hidden"
+            className="h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
           >
-            <Crop className="h-4 w-4" />
+            <Crop className="h-5 w-5" />
           </Button>
+          {/* Mobile zoom in Button */}
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
+            onClick={() => adjustZoom(-ZOOM_STEP)}
+            disabled={zoom <= MIN_ZOOM}
+            aria-label={`Zoom level: ${zoom}%`}
+            className="group h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
+          >
+            <ZoomOut className="h-5 w-5 transition-colors" />
+          </Button>
+          {/* Mobile zoom in Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => adjustZoom(ZOOM_STEP)}
+            disabled={zoom >= MAX_ZOOM}
+            aria-label={`Zoom level: ${zoom}%`}
+            className="group h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
+          >
+            <ZoomIn className="h-5 w-5 transition-colors" />
+          </Button>
+          {/* Mobile download Button */}
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => handleDownload("image")}
-            className="group md:hidden"
+            className="group h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
           >
-            <Download className="h-4 w-4 mr-2 text-blue-600 group-hover:text-white transition-colors" />
+            <Download className="h-5 w-5 transition-colors" />
           </Button>
+
+
           {/* Share Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="md:hidden">
-                <Share2 className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-10 w-10 shrink-0 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 md:hidden"
+              >
+                <Share2 className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-48 [&_.dropdown-item:hover]:text-white [&_.dropdown-item:hover_svg]:text-white"
+              className="w-52 rounded-xl border-border/70 p-1 shadow-lg"
             >
               <DropdownMenuItem
                 onClick={() => handleShare("facebook")}
@@ -465,9 +454,9 @@ export function Header({
         </div>
 
         {/* Right section: Tools and controls */}
-        <div className="hidden md:flex items-center space-x-2">
-          <div className="flex items-center space-x-2 mr-4">
-            <ZoomIn className="h-4 w-4 text-muted-foreground" />
+        <div className="hidden shrink-0 md:flex md:items-center md:gap-1">
+          <div className="mr-3 flex items-center gap-2 border-r border-border/70 pr-4">
+            <ZoomIn className="h-5 w-5 text-muted-foreground" />
             <Slider
               value={[zoom]}
               onValueChange={(value) => onZoomChange(value[0])}
@@ -476,20 +465,25 @@ export function Header({
               step={10}
               className="w-20"
             />
-            <span className="text-xs text-muted-foreground w-8">{zoom}%</span>
+            <span className="w-9 text-right text-xs font-medium tabular-nums text-muted-foreground">{zoom}%</span>
           </div>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => handleDownload("image")}
-            className="group"
+            className="group h-10 w-10 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <Download className="h-4 w-4 mr-2 text-blue-600 group-hover:text-white transition-colors" />
+            <Download className="h-5 w-5 transition-colors" />
           </Button>
 
-          <Button variant="outline" size="sm" onClick={handleCrop}>
-            <Crop className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCrop}
+            className="h-10 w-10 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <Crop className="h-5 w-5" />
           </Button>
 
           {/* <Button
@@ -506,13 +500,17 @@ export function Header({
           {/* Share Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Share2 className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-10 w-10 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <Share2 className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-48 [&_.dropdown-item:hover]:text-white [&_.dropdown-item:hover_svg]:text-white"
+              className="w-52 rounded-xl border-border/70 p-1 shadow-lg"
             >
               <DropdownMenuItem
                 onClick={() => handleShare("facebook")}
@@ -554,8 +552,13 @@ export function Header({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" size="sm" onClick={onShowPageList}>
-            <List className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onShowPageList}
+            className="h-10 w-10 rounded-lg p-0 text-foreground transition-colors hover:bg-muted/70 hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <List className="h-5 w-5" />
           </Button>
         </div>
       </div>

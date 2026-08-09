@@ -117,12 +117,6 @@ export const getNewspaper = async (dateString: string): Promise<NewspaperData> =
   } catch (error) {
     console.error('Cloudinary fetch failed, using dummy data:', error);
   }
-  
-  // Fallback to dummy data if Cloudinary fetch fails
-  return {
-    ...dummyNewspaperData,
-    date: dateString
-  };
 };
 
 // Function to get a specific page

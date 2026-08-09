@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-//import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Header } from "./Header";
-//import { NewspaperSidebar } from "./NewspaperSidebar";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { NewspaperViewer } from "./NewspaperViewer";
 import { PageListDialog } from "./PageListDialog";
 import {
@@ -14,11 +19,9 @@ import { newspaperService, type NewspaperRecord } from "@/lib/newspaperService";
 import { ShareCroppedImage } from "./ShareCroppedImage";
 import { toast } from "@/hooks/use-toast";
 import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
-import { ChevronLeft, ChevronRight, Minus, Plus, ZoomIn } from "lucide-react";
-
-const MIN_ZOOM = 50;
-const MAX_ZOOM = 200;
-const ZOOM_STEP = 10;
+import { CalendarIcon, ChevronsRight,  ChevronsLeft} from "lucide-react";
+import { format } from "date-fns";
+import { cn, playSound } from "@/lib/utils";
 
 // Helper function to format dates consistently in Indian timezone
 const formatDateForAPI = (date: Date): string => {
@@ -78,7 +81,6 @@ export function NewspaperApp() {
   const [totalPages, setTotalPages] = useState(8);
   const [zoom, setZoom] = useState(100);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedSection, setSelectedSection] = useState("front-page");
   const [showPageList, setShowPageList] = useState(false);
   const [isCropMode, setIsCropMode] = useState(false);
   const [croppedImageData, setCroppedImageData] = useState<string | null>(null);
@@ -86,6 +88,8 @@ export function NewspaperApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);
+  const [isMobileDatePickerOpenInHeader, setIsMobileDatePickerOpenInHeader] = useState(false);
+
 
   // Read URL query parameters on component mount
   useEffect(() => {
@@ -147,9 +151,6 @@ export function NewspaperApp() {
           setTotalPages(data.totalPages);
         }
 
-        // Always reset to first page when date changes
-        // setCurrentPage(1);
-        setSelectedSection("front-page");
       } catch (err) {
         console.error("Error fetching newspaper:", err);
         // Fallback to dummy data on error
@@ -235,37 +236,16 @@ export function NewspaperApp() {
     }
   };
 
+
   // Update section when page changes
   const handlePageChange = async (page: number) => {
+    playSound();
     setCurrentPage(page);
-
-    // Use existing data from the API call - no new API call needed
-    const pageData = newspaperData?.pages.find((p) => p.pageNumber === page);
-    if (pageData) {
-      setSelectedSection(pageData.section);
-    } else {
-      console.error("⚠️ Page data not found for page:", page);
-    }
-  };
-
-  // Update page when section changes
-  const handleSectionChange = (section: string) => {
-    setSelectedSection(section);
-    const pageData = newspaperData?.pages.find((p) => p.section === section);
-    if (pageData) {
-      setCurrentPage(pageData.pageNumber);
-    }
   };
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
     setCurrentPage(1);
-  };
-
-  const adjustZoom = (amount: number) => {
-    setZoom((currentZoom) =>
-      Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, currentZoom + amount))
-    );
   };
 
   const handleCropComplete = (croppedImage: string) => {
@@ -286,49 +266,77 @@ export function NewspaperApp() {
   }
 
   // Error state
-  if (error || !newspaperData) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-destructive text-2xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold mb-2">
-            Failed to Load Newspaper
-          </h2>
-          <p className="text-muted-foreground mb-4">
-            {error || "No data available"}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // if (error || !newspaperData) {
+  //   return (
+  //     <div className="min-h-screen bg-background flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="text-destructive text-2xl mb-4">⚠️</div>
+  //         <h2 className="text-xl font-semibold mb-2">
+  //           Failed to Load Newspaper
+  //         </h2>
+  //         <p className="text-muted-foreground mb-4">
+  //           {error || "No data available"}
+  //         </p>
+  //         {/* <button
+  //           onClick={() => window.location.reload()}
+  //           className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
+  //         >
+  //           Retry
+  //         </button> */}
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-background relative">
       {/* <SidebarProvider> */}
       <div className="flex min-h-screen w-full">
-        {/* Sidebar */}
-        {/* <NewspaperSidebar
-            selectedSection={selectedSection}
-            onSectionChange={handleSectionChange}
-            currentPage={currentPage}
-            pagesData={newspaperData.pages}
-          /> */}
-
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-center my-4">
+          <div className="flex items-center justify-start pl-4 md:pl-0 md:justify-center my-4 border-b border-red-100 md:border-none pb-4 md:pb-0 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.3)] md:shadow-none">
             <img
               src={jawanBharatLogo}
               alt="logo"
-              className="w-auto h-8 md:h-12 bg-transparent"
+              className="w-auto h-6 md:h-12 bg-transparent"
               style={{ mixBlendMode: "darken" }}
             />
+            <Popover
+              open={isMobileDatePickerOpenInHeader}
+              onOpenChange={setIsMobileDatePickerOpenInHeader}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-10 min-w-10 rounded-lg border-border/70 px-2 text-left font-medium shadow-none transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 sm:px-3 md:hidden ml-4",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="h-5 w-5 shrink-0 sm:mr-2" />
+                  <span className="hidden min-[390px]:inline">
+                    {format(selectedDate, "MMM dd, yyyy")}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  disabled={{ after: new Date() }}
+                  toMonth={new Date()}
+                  onSelect={(date) => {
+                    if (date) {
+                      handleDateChange(date);
+                      setIsMobileDatePickerOpenInHeader(false);
+                    }
+                  }}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <Header
             currentPage={currentPage}
@@ -345,51 +353,28 @@ export function NewspaperApp() {
             isRefreshing={loading}
             currentPageData={currentPageData}
           />
-          <div aria-hidden="true" className="h-10 shrink-0 md:hidden" />
+          <div className="flex flex-1 min-h-0 min-w-0">
+            {
+              newspaperData ? <NewspaperViewer
+                currentPage={currentPage}
+                zoom={zoom}
+                newspaperData={newspaperData}
+                onCropComplete={handleCropComplete}
+                isCropMode={isCropMode}
+                onCropModeChange={setIsCropMode}
+                totalPages={totalPages}
+              /> : <div className=" w-full h-full flex justify-center items-center">
+                <p className="text-muted-foreground">
+                  {"No data available"}
+                </p>
+              </div>
+            }
 
-          <div className="flex-1 flex">
-            <NewspaperViewer
-              currentPage={currentPage}
-              zoom={zoom}
-              selectedSection={selectedSection}
-              newspaperData={newspaperData}
-              onCropComplete={handleCropComplete}
-              isCropMode={isCropMode}
-              onCropModeChange={setIsCropMode}
-              totalPages={totalPages}
-            />
           </div>
-          <div className="bg-[#595959] text-white text-center py-2">
-            Copyright © 2025 Jawan Bharat. All rights reserved.
+          <div className="mb-20 shrink-0 bg-[#595959] py-2 text-center text-white md:mb-0">
+            Copyright © 2026 Jawan Bharat. All rights reserved.
           </div>
         </div>
-      </div>
-      <div className="fixed  bg-green-400 text-4xl">ome</div>
-      <div className="fixed bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center overflow-hidden rounded-full border bg-background shadow-lg md:hidden">
-        <button
-          type="button"
-          onClick={() => adjustZoom(-ZOOM_STEP)}
-          disabled={zoom <= MIN_ZOOM}
-          className="flex h-11 w-11 items-center justify-center border-r text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Zoom out"
-        >
-          <Minus className="h-5 w-5" />
-        </button>
-        <div
-          className="flex h-11 w-11 items-center justify-center text-muted-foreground"
-          aria-label={`Zoom level: ${zoom}%`}
-        >
-          <ZoomIn className="h-5 w-5" />
-        </div>
-        <button
-          type="button"
-          onClick={() => adjustZoom(ZOOM_STEP)}
-          disabled={zoom >= MAX_ZOOM}
-          className="flex h-11 w-11 items-center justify-center border-l text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Zoom in"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
       </div>
       {/* Left Navigation Bar - Positioned within container bounds */}
       {currentPage > 1 && (
@@ -397,10 +382,8 @@ export function NewspaperApp() {
           className="fixed left-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
           onClick={() => handlePageChange(currentPage - 1)}
         >
-          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-r-lg p-2 backdrop-blur-sm">
-            <div className="flex items-center justify-center">
-              <ChevronLeft className="h-6 w-6 text-white drop-shadow-lg" />
-            </div>
+          <div className="bg-black/30 hover:bg-black/40 transition-all duration-200 rounded-r-lg p-2 h-36 flex justify-center items-center">
+              <ChevronsLeft className="h-6 w-6 text-white drop-shadow-lg" />
           </div>
         </div>
       )}
@@ -411,9 +394,9 @@ export function NewspaperApp() {
           className="fixed right-2 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer group"
           onClick={() => handlePageChange(currentPage + 1)}
         >
-          <div className="bg-black/20 hover:bg-black/40 transition-all duration-200 rounded-l-lg p-2 backdrop-blur-sm">
+          <div className="bg-black/30 hover:bg-black/40 transition-all duration-200 rounded-l-lg p-2 h-36 flex justify-center items-center">
             <div className="flex items-center justify-center">
-              <ChevronRight className="h-6 w-6 text-white drop-shadow-lg" />
+              <ChevronsRight className="h-6 w-6 text-white drop-shadow-lg" />
             </div>
           </div>
         </div>
