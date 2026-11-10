@@ -179,8 +179,8 @@ export function NewspaperViewer({
         pageNumber: currentPage,
         totalPages: totalPages,
         date: currentPageData?.metadata?.date,
-        logoHeight: 32, // Fixed logo height
-        logoWidth: 189, // Fixed logo width
+        // logoHeight: 200, // Fixed logo height
+        // logoWidth: 600, // Fixed logo width
       });
       onCropComplete(compositeImageData);
 
@@ -201,8 +201,8 @@ export function NewspaperViewer({
           pageNumber: currentPage,
           totalPages: totalPages,
           date: currentPageData?.metadata?.date,
-          logoHeight: 32, // Fixed logo height
-          logoWidth: 189, // Fixed logo width
+          logoHeight: 64, // Fixed logo height
+          logoWidth: 400, // Fixed logo width
         });
 
         onCropComplete(compositeImageData);
