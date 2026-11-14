@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, CalendarIcon, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 import { useNewspaperUpload } from '@/hooks/admin/useNewspaperUpload';
 import { StepWizard } from '@/components/admin/newspapers/StepWizard';
 import { UploadZone } from '@/components/admin/newspapers/UploadZone';
@@ -27,9 +28,45 @@ export function CreateNewspaperPage() {
     }
   }, [upload.selectedDate, upload.checkNewspaperExists, step]);
 
+  // Page numbers used by more than one image. Failed uploads are ignored because
+  // only successfully uploaded images are published.
+  const duplicatePages = useMemo(() => {
+    const filesByPage = new Map<number, string[]>();
+    upload.images
+      .filter((img) => img.status !== 'error')
+      .forEach((img) => {
+        filesByPage.set(img.pageNumber, [
+          ...(filesByPage.get(img.pageNumber) ?? []),
+          img.file.name,
+        ]);
+      });
+    return Array.from(filesByPage.entries())
+      .filter(([, files]) => files.length > 1)
+      .map(([page, files]) => ({ page, files }))
+      .sort((a, b) => a.page - b.page);
+  }, [upload.images]);
+
+  const hasDuplicatePages = duplicatePages.length > 0;
+
   const canProceedToUpload = !upload.newspaperExists;
   const canProceedToReview =
-    upload.successCount > 0 && upload.pendingCount === 0 && !upload.isUploading;
+    upload.successCount > 0 &&
+    upload.pendingCount === 0 &&
+    !upload.isUploading &&
+    !hasDuplicatePages;
+
+  // Block "Upload all" while duplicates exist (the same page number would overwrite the earlier file)
+  const handleUploadAll = () => {
+    if (hasDuplicatePages) {
+      toast({
+        title: 'Duplicate Page Numbers',
+        description: 'Remove the duplicate pages from the queue before uploading.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    upload.uploadImages();
+  };
 
   const handlePublish = async () => {
     const id = await upload.publishNewspaper();
@@ -40,17 +77,21 @@ export function CreateNewspaperPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto w-full">
-      <Button variant="ghost" size="sm" className="mb-4 -ml-2" asChild>
-        <Link to="/admin">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Newspapers
-        </Link>
-      </Button>
+      <div className='flex justify-between'>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight mb-1 text-left">Create Newspaper</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Publish a new edition in three steps
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" className="mb-4 -ml-2" asChild>
+          <Link to="/admin">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Newspapers
+          </Link>
+        </Button>
+      </div>
 
-      <h1 className="text-2xl font-semibold tracking-tight mb-1">Create Newspaper</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Publish a new edition in three steps
-      </p>
 
       <StepWizard currentStep={step} />
 
@@ -138,8 +179,26 @@ export function CreateNewspaperPage() {
             </Card>
 
             {upload.images.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium mb-3">
+              <div className="space-y-3">
+                {hasDuplicatePages && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <p className="font-medium mb-1 text-left">
+                        Duplicate page numbers found. Remove the extra images to continue.
+                      </p>
+                      <ul className="list-disc pl-5 space-y-0.5 text-left">
+                        {duplicatePages.map(({ page, files }) => (
+                          <li key={page}>
+                            Page {page} is used by {files.length} images: {files.join(', ')}
+                          </li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <h3 className="text-sm font-medium">
                   Queued Pages ({upload.images.length})
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -163,7 +222,7 @@ export function CreateNewspaperPage() {
               pendingCount={upload.pendingCount}
               maxPageNumber={upload.maxPageNumber}
               isUploading={upload.isUploading}
-              onUploadAll={upload.uploadImages}
+              onUploadAll={handleUploadAll}
             />
           </div>
 
@@ -171,7 +230,11 @@ export function CreateNewspaperPage() {
             <Button variant="outline" onClick={() => setStep('date')}>
               Back
             </Button>
-            <Button onClick={() => setStep('review')} disabled={!canProceedToReview}>
+            <Button
+              onClick={() => setStep('review')}
+              disabled={!canProceedToReview}
+              title={hasDuplicatePages ? 'Remove duplicate page numbers to continue' : undefined}
+            >
               Next: Review
             </Button>
           </div>

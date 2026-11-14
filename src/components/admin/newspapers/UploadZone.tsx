@@ -75,13 +75,10 @@ export function UploadZone({
             onChange={handlePageNumberChange}
             className="w-24"
           />
-          <p className="text-xs text-muted-foreground">
-            Assigned to all files added in this batch
-          </p>
         </div>
         {!canUpload && (
-          <p className="text-xs text-destructive" role="status">
-            Enter the page number first to enable upload.
+          <p className="text-xs text-destructive text-left" role="status">
+            Enter the page number first to upload newspaper pages.
           </p>
         )}
       </div>

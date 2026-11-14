@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Newspaper, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 
 const navItems = [
   {
@@ -15,8 +16,12 @@ export function AdminSidebar() {
   return (
     <aside className="hidden md:flex w-56 flex-col border-r bg-card shrink-0">
       <div className="p-4 border-b">
-        <h2 className="font-semibold text-sm text-foreground">Jawan Bharat</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Admin Portal</p>
+        <img
+          src={jawanBharatLogo}
+          alt="logo"
+          className="w-44 h-auto bg-transparent"
+          style={{ mixBlendMode: "darken" }}
+        />
       </div>
 
       <nav className="flex-1 p-3 space-y-1" aria-label="Admin navigation">
