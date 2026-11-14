@@ -20,7 +20,8 @@ function createUploadedImage(file: File, date: Date, pageNumber: number): Upload
 export function useNewspaperUpload(initialDate: Date = new Date()) {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [pageNumber, setPageNumber] = useState(1);
+  // null = admin has not entered a page number yet; files cannot be added until they do
+  const [pageNumber, setPageNumber] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [newspaperExists, setNewspaperExists] = useState(false);
@@ -40,6 +41,17 @@ export function useNewspaperUpload(initialDate: Date = new Date()) {
 
   const addFiles = useCallback(
     (files: File[]) => {
+      // Safety net (the UI already disables upload until a page number is entered)
+      if (pageNumber === null || !Number.isInteger(pageNumber) || pageNumber < 1) {
+        toast({
+          title: 'Page Number Required',
+          description: 'Enter the page number before adding images.',
+          variant: 'destructive',
+        });
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
       const newImages = files.map((file) =>
         createUploadedImage(file, selectedDate, pageNumber)
       );
@@ -47,6 +59,9 @@ export function useNewspaperUpload(initialDate: Date = new Date()) {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      // Admin must enter the page number again for the next batch.
+      // Remove this line if you'd rather keep the number between batches.
+      setPageNumber(null);
     },
     [selectedDate, pageNumber]
   );
@@ -209,7 +224,7 @@ export function useNewspaperUpload(initialDate: Date = new Date()) {
   const reset = useCallback(() => {
     images.forEach((img) => URL.revokeObjectURL(img.preview));
     setImages([]);
-    setPageNumber(1);
+    setPageNumber(null);
     setNewspaperExists(false);
   }, [images]);
 
