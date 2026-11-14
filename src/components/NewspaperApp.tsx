@@ -427,10 +427,10 @@ export function NewspaperApp() {
             }
 
           </div>
-          <div className="mb-20 shrink-0 bg-[#595959] py-2 text-center text-white md:mb-0">
+          <div className="mb-5 shrink-0 bg-[#595959] py-2 text-center text-white md:mb-0">
             Copyright © 2026 Jawan Bharat. All rights reserved.
           </div>
-          {location.pathname === "/" && <section className="mx-auto max-w-4xl space-y-3 px-5 py-10 text-foreground" aria-labelledby="about-jawan-bharat">
+          {location.pathname === "/" && <section className="mx-auto max-w-4xl space-y-3 px-5 py-5 text-foreground" aria-labelledby="about-jawan-bharat">
             <h1 id="about-jawan-bharat" className="text-2xl font-bold">'जवान भारत' जळगाव येथून प्रकाशित होणारे मराठी दैनिक आहे.</h1>
             <p>दैनिक "जवान भारत" हे उत्तर महाराष्ट्रासह विदर्भ आणि मराठवाड्यातील वाचकांचे व्यासपीठ आहे. जळगाव, धुळे, नंदुरबार, नाशिक, बुलढाणा, अकोला, वाशिम, छत्रपती संभाजीनगर आणि जालना जिल्ह्यांत या दैनिकाचे वितरण होते.</p>
             <p>Read the Jawan Bharat ePaper, a Marathi daily newspaper published from Jalgaon. Jawan Bharat serves readers across North Maharashtra, Vidarbha and Marathwada, with circulation in Jalgaon, Dhule, Nandurbar, Nashik, Buldhana, Akola, Washim, Chhatrapati Sambhajinagar and Jalna.</p>

@@ -88,11 +88,11 @@ export function NewspaperViewer({
   const [crop, setCrop] = useState<CropType>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(true);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    // Add transition effect when page changes
+    // Keep the loading state active until this page's image actually loads.
     setIsTransitioning(true);
     setImageLoaded(false);
 
@@ -102,13 +102,19 @@ export function NewspaperViewer({
       viewerRef.current.scrollLeft = 0;
     }
 
-    // Remove transition after a short delay
-    const timer = setTimeout(() => {
-      setIsTransitioning(false);
-    }, 300);
+  }, [currentPage, newspaperData]);
 
-    return () => clearTimeout(timer);
-  }, [currentPage]);
+  // Warm the adjacent page images while the reader views the current page.
+  useEffect(() => {
+    const adjacentPages = [currentPage - 1, currentPage + 1];
+    adjacentPages.forEach((pageNumber) => {
+      const imageUrl = newspaperData?.pages.find((page) => page.pageNumber === pageNumber)?.imageUrl;
+      if (imageUrl) {
+        const image = new Image();
+        image.src = imageUrl;
+      }
+    });
+  }, [currentPage, newspaperData]);
 
   // Set initial crop when entering crop mode
   useEffect(() => {
@@ -159,8 +165,7 @@ export function NewspaperViewer({
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     setImageLoaded(true);
-    // End transition when image is loaded
-    setTimeout(() => setIsTransitioning(false), 100);
+    setIsTransitioning(false);
 
     setCrop(getDefaultCrop(img.width, img.height));
   };
@@ -322,11 +327,13 @@ export function NewspaperViewer({
                         className="w-full"
                       >
                         <img
+                          key={currentPageData.imageUrl}
                           ref={imgRef}
                           src={currentPageData.imageUrl}
                           alt={`Jawan Bharat Marathi newspaper page ${currentPage} of ${newspaperData.date}`}
-                          loading={currentPage === 1 ? "eager" : "lazy"}
+                          loading="eager"
                           decoding="async"
+                          fetchPriority="high"
                           className="w-full h-auto"
                           onLoad={onImageLoad}
                           draggable={false}
@@ -338,12 +345,19 @@ export function NewspaperViewer({
                   ) : (
                     /* Normal Mode: Regular Image */
                     <img
+                      key={currentPageData.imageUrl}
                       src={currentPageData.imageUrl}
                       alt={`Jawan Bharat Marathi newspaper page ${currentPage} of ${newspaperData.date}`}
-                      loading={currentPage === 1 ? "eager" : "lazy"}
+                      loading="eager"
                       decoding="async"
+                      fetchPriority="high"
                       className="w-full h-auto"
                       crossOrigin="anonymous"
+                      onLoad={onImageLoad}
+                      onError={() => {
+                        setImageLoaded(false);
+                        setIsTransitioning(false);
+                      }}
                       style={{ maxWidth: "100%", width: "100%" }}
                     />
                   )}
