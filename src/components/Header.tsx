@@ -95,8 +95,15 @@ export function Header({
       }
     };
 
-    url.searchParams.set("date", formatDateForURL(selectedDate));
-    url.searchParams.set("page", currentPage.toString());
+    if (url.pathname.startsWith("/edition/")) {
+      url.pathname = `/edition/${formatDateForURL(selectedDate)}`;
+      url.searchParams.delete("date");
+      url.searchParams.delete("page");
+    } else {
+      // Preserve the canonical homepage URL; legacy query links still work for sharing.
+      url.searchParams.set("date", formatDateForURL(selectedDate));
+      url.searchParams.set("page", currentPage.toString());
+    }
 
     // Update URL without reloading the page
     window.history.replaceState({}, "", url.toString());

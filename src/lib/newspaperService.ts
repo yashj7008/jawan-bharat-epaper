@@ -115,6 +115,19 @@ export class NewspaperService {
     }
   }
 
+  async getAdjacentEditionDates(date: string): Promise<{ previous: string | null; next: string | null }> {
+    try {
+      const supabase = this.getSupabaseClient();
+      const [previousResult, nextResult] = await Promise.all([
+        supabase.from('newspaper').select('date_of_paper').lt('date_of_paper', date).order('date_of_paper', { ascending: false }).limit(1),
+        supabase.from('newspaper').select('date_of_paper').gt('date_of_paper', date).order('date_of_paper', { ascending: true }).limit(1),
+      ]);
+      return { previous: previousResult.data?.[0]?.date_of_paper ?? null, next: nextResult.data?.[0]?.date_of_paper ?? null };
+    } catch {
+      return { previous: null, next: null };
+    }
+  }
+
   // Check if newspaper exists for a date
   async newspaperExists(date: string): Promise<boolean> {
     try {

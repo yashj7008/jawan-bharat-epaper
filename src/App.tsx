@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import { CroppedImage } from './pages/CroppedImage';
@@ -15,15 +16,31 @@ import { ViewNewspaperPage } from './pages/admin/ViewNewspaperPage';
 import { EditNewspaperPage } from './pages/admin/EditNewspaperPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import './App.css';
+import { NewspaperApp } from './components/NewspaperApp';
+
+function RouteRobots() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const privateRoute = /^\/(admin|signin|signup|reset-password|test-cloudinary|cropped)(\/|$)/.test(pathname);
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'robots'; document.head.appendChild(meta); }
+    meta.content = privateRoute ? 'noindex,nofollow' : 'index,follow,max-image-preview:large';
+  }, [pathname]);
+  return null;
+}
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <RouteRobots />
         <div className="App">
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/edition/:date" element={<NewspaperApp />} />
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+            {/* <Route path="/admin" element={<AdminLayout />}> */}
+
               <Route index element={<NewspaperListPage />} />
               <Route path="newspapers/new" element={<CreateNewspaperPage />} />
               <Route path="newspapers/:id" element={<ViewNewspaperPage />} />

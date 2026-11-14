@@ -324,7 +324,9 @@ export function NewspaperViewer({
                         <img
                           ref={imgRef}
                           src={currentPageData.imageUrl}
-                          alt="Newspaper Page"
+                          alt={`Jawan Bharat Marathi newspaper page ${currentPage} of ${newspaperData.date}`}
+                          loading={currentPage === 1 ? "eager" : "lazy"}
+                          decoding="async"
                           className="w-full h-auto"
                           onLoad={onImageLoad}
                           draggable={false}
@@ -337,7 +339,9 @@ export function NewspaperViewer({
                     /* Normal Mode: Regular Image */
                     <img
                       src={currentPageData.imageUrl}
-                      alt="Newspaper Page"
+                      alt={`Jawan Bharat Marathi newspaper page ${currentPage} of ${newspaperData.date}`}
+                      loading={currentPage === 1 ? "eager" : "lazy"}
+                      decoding="async"
                       className="w-full h-auto"
                       crossOrigin="anonymous"
                       style={{ maxWidth: "100%", width: "100%" }}

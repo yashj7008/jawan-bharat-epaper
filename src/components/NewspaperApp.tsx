@@ -22,6 +22,7 @@ import jawanBharatLogo from "@/assets/jawan-bharat-logo.png";
 import { CalendarIcon, ChevronsRight,  ChevronsLeft} from "lucide-react";
 import { format } from "date-fns";
 import { cn, playSound } from "@/lib/utils";
+import { useParams, useLocation } from "react-router-dom";
 
 // Helper function to format dates consistently in Indian timezone
 const formatDateForAPI = (date: Date): string => {
@@ -74,6 +75,8 @@ const convertSupabaseToNewspaperData = (
 };
 
 export function NewspaperApp() {
+  const { date: routeDate } = useParams<{ date: string }>();
+  const location = useLocation();
   const [newspaperData, setNewspaperData] = useState<NewspaperData | null>(
     null
   );
@@ -89,12 +92,13 @@ export function NewspaperApp() {
   const [error, setError] = useState<string | null>(null);
   const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);
   const [isMobileDatePickerOpenInHeader, setIsMobileDatePickerOpenInHeader] = useState(false);
+  const [adjacentEditions, setAdjacentEditions] = useState<{ previous: string | null; next: string | null }>({ previous: null, next: null });
 
 
   // Read URL query parameters on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const dateParam = urlParams.get("date");
+    const dateParam = routeDate || urlParams.get("date");
     const pageParam = urlParams.get("page");
 
     if (dateParam) {
@@ -116,7 +120,54 @@ export function NewspaperApp() {
     }
 
     setInitialUrlProcessed(true);
-  }, []); // Only run once on mount
+  }, [routeDate]);
+
+  useEffect(() => {
+    const date = formatDateForAPI(selectedDate);
+    const isEdition = location.pathname.startsWith("/edition/");
+    const title = isEdition
+      ? `Jawan Bharat ePaper ${date} | आजचा दैनिक जवान भारत`
+      : "Jawan Bharat ePaper | दैनिक जवान भारत";
+    const description = isEdition
+      ? `${date} रोजचा जवान भारत मराठी ePaper वाचा. जळगावच्या बातम्या आणि आजच्या अंकातील सर्व पाने येथे पाहा.`
+      : "'जवान भारत' हे जळगाव येथून प्रकाशित होणारे मराठी दैनिक असून उत्तर महाराष्ट्र, विदर्भ आणि मराठवाड्यातील वाचकांपर्यंत पोहोचते. आजचा ePaper वाचा.";
+    const canonical = `https://epaper.jawanbharat.com${isEdition ? `/edition/${date}` : "/"}`;
+    document.title = title;
+    const setMeta = (selector: string, key: string, value: string) => {
+      let element = document.head.querySelector<HTMLMetaElement>(selector);
+      if (!element) { element = document.createElement("meta"); element.setAttribute(key, selector.includes("property") ? selector.match(/\[property="([^"]+)/)?.[1] || "" : selector.match(/\[name="([^"]+)/)?.[1] || ""); document.head.appendChild(element); }
+      element.content = value;
+    };
+    setMeta('meta[name="description"]', "name", description);
+    setMeta('meta[property="og:title"]', "property", title);
+    setMeta('meta[property="og:description"]', "property", description);
+    setMeta('meta[property="og:url"]', "property", canonical);
+    setMeta('meta[property="og:type"]', "property", "website");
+    setMeta('meta[property="og:image"]', "property", "https://res.cloudinary.com/djm9pwfzu/image/upload/v1785834120/Javan_Bharat_pubkvw.png");
+    setMeta('meta[name="twitter:card"]', "name", "summary_large_image");
+    setMeta('meta[name="twitter:image"]', "name", "https://res.cloudinary.com/djm9pwfzu/image/upload/v1785834120/Javan_Bharat_pubkvw.png");
+    setMeta('meta[name="robots"]', "name", "index,follow,max-image-preview:large");
+    let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) { link = document.createElement("link"); link.rel = "canonical"; document.head.appendChild(link); }
+    link.href = canonical;
+    const structuredData = {
+      "@context": "https://schema.org", "@graph": [
+        { "@type": "Organization", "@id": "https://epaper.jawanbharat.com/#organization", name: "Jawan Bharat", url: "https://epaper.jawanbharat.com/", logo: { "@type": "ImageObject", url: "https://res.cloudinary.com/djm9pwfzu/image/upload/v1785834120/Javan_Bharat_pubkvw.png" } },
+        { "@type": "WebSite", "@id": "https://epaper.jawanbharat.com/#website", url: "https://epaper.jawanbharat.com/", name: "Jawan Bharat ePaper", publisher: { "@id": "https://epaper.jawanbharat.com/#organization" }, inLanguage: ["mr", "en"] },
+        { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: "https://epaper.jawanbharat.com/" }, ...(isEdition ? [{ "@type": "ListItem", position: 2, name: `ePaper ${date}`, item: canonical }] : [])] },
+        ...(newspaperData?.pages[0]?.imageUrl ? [{ "@type": "ImageObject", contentUrl: newspaperData.pages[0].imageUrl, name: `Jawan Bharat newspaper front page ${date}`, description: `Front page of Jawan Bharat Marathi newspaper published on ${date}` }] : [])
+      ]
+    };
+    let script = document.getElementById("seo-structured-data") as HTMLScriptElement | null;
+    if (!script) { script = document.createElement("script"); script.id = "seo-structured-data"; script.type = "application/ld+json"; document.head.appendChild(script); }
+    script.textContent = JSON.stringify(structuredData);
+  }, [selectedDate, location.pathname, newspaperData]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/edition/')) {
+      newspaperService.getAdjacentEditionDates(formatDateForAPI(selectedDate)).then(setAdjacentEditions);
+    }
+  }, [selectedDate, location.pathname]);
 
   // Get current page data
   const currentPageData = newspaperData?.pages.find(
@@ -297,7 +348,7 @@ export function NewspaperApp() {
           <div className="sticky top-0 z-40 flex items-center justify-start bg-background px-4 py-3 md:my-4 border-b border-red-100  shadow-[0_4px_6px_-4px_rgba(0,0,0,0.3)] md:static md:justify-center md:border-none md:p-0 md:shadow-none">
             <img
               src={jawanBharatLogo}
-              alt="logo"
+              alt="Jawan Bharat Marathi newspaper logo"
               className="w-auto h-6 md:h-12 bg-transparent"
               style={{ mixBlendMode: "darken" }}
             />
@@ -353,6 +404,11 @@ export function NewspaperApp() {
             isRefreshing={loading}
             currentPageData={currentPageData}
           />
+          {location.pathname.startsWith('/edition/') && <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+            {adjacentEditions.previous ? <a className="text-sm text-primary underline" href={`/edition/${adjacentEditions.previous}`}>← मागील अंक</a> : <span />}
+            <h1 className="text-center text-lg font-semibold">Jawan Bharat ePaper — {format(selectedDate, "dd MMMM yyyy")} | जवान भारत ई पेपर</h1>
+            {adjacentEditions.next ? <a className="text-sm text-primary underline" href={`/edition/${adjacentEditions.next}`}>पुढील अंक →</a> : <span />}
+          </div>}
           <div className="flex flex-1 min-h-0 min-w-0">
             {
               newspaperData ? <NewspaperViewer
@@ -374,6 +430,12 @@ export function NewspaperApp() {
           <div className="mb-20 shrink-0 bg-[#595959] py-2 text-center text-white md:mb-0">
             Copyright © 2026 Jawan Bharat. All rights reserved.
           </div>
+          {location.pathname === "/" && <section className="mx-auto max-w-4xl space-y-3 px-5 py-10 text-foreground" aria-labelledby="about-jawan-bharat">
+            <h1 id="about-jawan-bharat" className="text-2xl font-bold">'जवान भारत' जळगाव येथून प्रकाशित होणारे मराठी दैनिक आहे.</h1>
+            <p>दैनिक "जवान भारत" हे उत्तर महाराष्ट्रासह विदर्भ आणि मराठवाड्यातील वाचकांचे व्यासपीठ आहे. जळगाव, धुळे, नंदुरबार, नाशिक, बुलढाणा, अकोला, वाशिम, छत्रपती संभाजीनगर आणि जालना जिल्ह्यांत या दैनिकाचे वितरण होते.</p>
+            <p>Read the Jawan Bharat ePaper, a Marathi daily newspaper published from Jalgaon. Jawan Bharat serves readers across North Maharashtra, Vidarbha and Marathwada, with circulation in Jalgaon, Dhule, Nandurbar, Nashik, Buldhana, Akola, Washim, Chhatrapati Sambhajinagar and Jalna.</p>
+            <p className="text-sm">आजचा जवान भारत पेपर किंवा उपलब्ध मागील अंक वाचण्यासाठी दिनदर्शिकेतून प्रकाशन तारीख निवडा. प्रत्येक उपलब्ध अंकाची स्वतंत्र लिंक सामायिक करता येते.</p>
+          </section>}
         </div>
       </div>
       {/* Left Navigation Bar - Positioned within container bounds */}
